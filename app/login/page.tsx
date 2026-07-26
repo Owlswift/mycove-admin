@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import { saveTokens } from '@/lib/auth';
 
+type AdminRole = 'ADMIN' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN';
+
 export default function LoginPage() {
   const router = useRouter();
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<AdminRole>('ADMIN');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +22,7 @@ export default function LoginPage() {
     try {
       const result = await apiFetch<{ accessToken: string; refreshToken: string }>('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ phone, password, role: 'ADMIN' }),
+        body: JSON.stringify({ phone, password, role }),
       });
       saveTokens(result.accessToken, result.refreshToken);
       router.push('/');
@@ -61,6 +64,18 @@ export default function LoginPage() {
               placeholder="••••••••"
               className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700">Signing in as</label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as AdminRole)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            >
+              <option value="ADMIN">Admin</option>
+              <option value="FINANCE_SECRETARY">Finance Secretary</option>
+              <option value="PROJECT_ADMIN">Project Admin</option>
+            </select>
           </div>
         </div>
 
