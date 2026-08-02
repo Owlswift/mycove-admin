@@ -5,7 +5,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 
 interface Props {
   onClose: () => void;
-  onCreated: (defaultPassword: string, fullName: string) => void;
+  onCreated: (defaultPassword: string | null, fullName: string) => void;
 }
 
 export default function CreateUserModal({ onClose, onCreated }: Props) {
@@ -13,21 +13,25 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN'>('RESIDENT');
   const [house, setHouse] = useState('');
+  const [guardPassword, setGuardPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const isGuard = role === 'GUARD';
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const result = await apiFetch<{ defaultPassword: string }>('/admin/users', {
+      const result = await apiFetch<{ defaultPassword: string | null }>('/admin/users', {
         method: 'POST',
         body: JSON.stringify({
           phone,
           fullName,
           role,
           house: house.trim() || undefined,
+          password: isGuard ? guardPassword : undefined,
         }),
       });
       onCreated(result.defaultPassword, fullName);
@@ -46,8 +50,9 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
       >
         <h2 className="text-lg font-semibold text-slate-900">New account</h2>
         <p className="mt-1 text-sm text-slate-500">
-          A default password (their surname in caps) is generated automatically — share it with
-          them, they&apos;ll be asked to change it on first login.
+          {isGuard
+            ? "Security guards share a duty phone, so there's no personal first-login setup — set their password directly below."
+            : "A default password (their surname in caps) is generated automatically — share it with them, they'll be asked to change it on first login."}
         </p>
 
         <div className="mt-5 space-y-4">
@@ -88,6 +93,20 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
               <option value="PROJECT_ADMIN">Project Admin</option>
             </select>
           </div>
+          {isGuard && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700">Password</label>
+              <input
+                type="text"
+                required
+                minLength={6}
+                value={guardPassword}
+                onChange={(e) => setGuardPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-slate-700">
               House address {role !== 'RESIDENT' && <span className="text-slate-400">(optional)</span>}
@@ -115,7 +134,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {loading ? 'Creating…' : 'Create account'}
           </button>

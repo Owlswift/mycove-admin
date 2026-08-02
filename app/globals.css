@@ -3,11 +3,30 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Ported from the mobile app's "Organic" palette (ChColors) so the admin
+     and resident/guard apps read as one product. */
+  --color-accent: #c67139;
+  --color-accent-soft: #fff2eb;
+  --color-accent-hover: #b2622d;
+  --color-accent-dark: #8c491a;
+  --color-accent2: #7a8a5e;
+  --color-accent2-soft: #f0fae1;
+  --color-accent2-hover: #728157;
+  --color-warm-50: #faf7f2;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent2: var(--color-accent2);
+  --color-accent2-soft: var(--color-accent2-soft);
+  --color-accent2-hover: var(--color-accent2-hover);
+  --color-warm-50: var(--color-warm-50);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }

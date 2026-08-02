@@ -1,0 +1,131 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { apiFetch, ApiError } from '@/lib/api';
+import { Spotlight } from '@/lib/types';
+import { useCurrentUser } from '@/lib/use-current-user';
+import AppShell from '@/components/AppShell';
+import MediaPreview from '@/components/MediaPreview';
+
+export default function SpotlightsPage() {
+  const { user, loading: userLoading } = useCurrentUser();
+  const [spotlights, setSpotlights] = useState<Spotlight[] | null>(null);
+  const [error, setError] = useState('');
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const result = await apiFetch<Spotlight[]>('/spotlights');
+      setSpotlights(result);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to load spotlights.');
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (user?.role === 'ADMIN') void load();
+  }, [user, load]);
+
+  async function handleToggle(id: string) {
+    setBusyId(id);
+    try {
+      await apiFetch(`/spotlights/${id}/toggle`, { method: 'POST' });
+      void load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to update spotlight.');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setBusyId(id);
+    try {
+      await apiFetch(`/spotlights/${id}`, { method: 'DELETE' });
+      void load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to delete spotlight.');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  if (userLoading || !user) {
+    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+  }
+
+  return (
+    <AppShell user={user} allow={['ADMIN']}>
+      <div className="px-6 py-8">
+        <div className="mx-auto max-w-3xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">Spotlights</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Celebrate residents or promote local businesses — the active one shows on the mobile home screen.
+              </p>
+            </div>
+            <Link
+              href="/spotlights/new"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+            >
+              + New spotlight
+            </Link>
+          </div>
+
+          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+          {spotlights === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {spotlights && spotlights.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No spotlights created yet.</p>
+          )}
+          {spotlights && spotlights.length > 0 && (
+            <div className="mt-6 space-y-3">
+              {spotlights.map((s) => (
+                <div key={s.id} className="flex items-start gap-4 rounded-lg border border-slate-200 bg-white p-4">
+                  {s.imageBase64 && (
+                    <MediaPreview dataUrl={s.imageBase64} className="h-16 w-16 shrink-0 rounded-full object-cover" />
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-slate-900">{s.name}</p>
+                      <span className="rounded-full bg-accent2-soft px-2 py-0.5 text-xs font-medium text-accent2-hover">
+                        {s.category === 'PERSON' ? 'Person' : 'Business'}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          s.active ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-500'
+                        }`}
+                      >
+                        {s.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-600">{s.description}</p>
+                    {s.phone && <p className="mt-1 text-xs text-slate-400">{s.phone}</p>}
+                  </div>
+                  <div className="flex shrink-0 gap-3">
+                    <button
+                      onClick={() => handleToggle(s.id)}
+                      disabled={busyId === s.id}
+                      className="text-xs font-medium text-accent2 hover:text-accent2-hover disabled:opacity-50"
+                    >
+                      {s.active ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(s.id)}
+                      disabled={busyId === s.id}
+                      className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </AppShell>
+  );
+}

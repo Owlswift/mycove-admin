@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useCurrentUser } from '@/lib/use-current-user';
 import AppShell from '@/components/AppShell';
 
 export default function NewPollPage() {
   const { user, loading: userLoading } = useCurrentUser();
+  const router = useRouter();
   const [question, setQuestion] = useState('');
   const [closesInDays, setClosesInDays] = useState(7);
   const [options, setOptions] = useState(['', '']);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   function updateOption(index: number, value: string) {
@@ -29,7 +31,6 @@ export default function NewPollPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    setSuccess(false);
     const trimmed = options.map((o) => o.trim()).filter(Boolean);
     if (trimmed.length < 2) {
       setError('Add at least two options.');
@@ -41,10 +42,7 @@ export default function NewPollPage() {
         method: 'POST',
         body: JSON.stringify({ question, closesInDays, options: trimmed }),
       });
-      setQuestion('');
-      setClosesInDays(7);
-      setOptions(['', '']);
-      setSuccess(true);
+      router.push('/polls');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to create poll.');
     } finally {
@@ -60,7 +58,10 @@ export default function NewPollPage() {
     <AppShell user={user} allow={['ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-2xl">
-          <h2 className="text-xl font-semibold text-slate-900">New Poll</h2>
+          <Link href="/polls" className="text-sm font-medium text-accent hover:text-accent-hover">
+            ← Back to polls
+          </Link>
+          <h2 className="mt-2 text-xl font-semibold text-slate-900">New Poll</h2>
           <p className="mt-1 text-sm text-slate-500">Residents will be able to vote once created.</p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-slate-200 bg-white p-6">
@@ -113,19 +114,18 @@ export default function NewPollPage() {
               <button
                 type="button"
                 onClick={addOption}
-                className="mt-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+                className="mt-2 text-sm font-medium text-accent2-hover hover:text-accent2"
               >
                 + Add option
               </button>
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
-            {success && <p className="text-sm text-green-700">Poll created.</p>}
 
             <button
               type="submit"
               disabled={loading}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create poll'}
             </button>

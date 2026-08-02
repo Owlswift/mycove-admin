@@ -148,7 +148,7 @@ export default function InvoicesPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
                 >
                   {submitting ? 'Submitting…' : 'Raise invoice'}
                 </button>

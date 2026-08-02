@@ -9,9 +9,10 @@ import { AdminUser, Role } from '@/lib/types';
 const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/users', label: 'Users', roles: ['ADMIN'] },
   { href: '/access-log', label: 'Access Log', roles: ['ADMIN'] },
-  { href: '/announcements/new', label: 'Announcements', roles: ['ADMIN'] },
-  { href: '/polls/new', label: 'Polls', roles: ['ADMIN'] },
-  { href: '/notifications/new', label: 'Notifications', roles: ['ADMIN'] },
+  { href: '/announcements', label: 'Announcements', roles: ['ADMIN'] },
+  { href: '/polls', label: 'Polls', roles: ['ADMIN'] },
+  { href: '/projects', label: 'Projects', roles: ['ADMIN'] },
+  { href: '/spotlights', label: 'Spotlights', roles: ['ADMIN'] },
   { href: '/finance', label: 'Finance', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
   { href: '/invoices', label: 'Invoices', roles: ['PROJECT_ADMIN'] },
 ];
@@ -59,28 +60,31 @@ export default function AppShell({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b border-slate-200 bg-white px-6 py-4">
+      <header className="border-b border-accent-soft bg-white px-6 py-4">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">CommunityHub Admin</h1>
-            <p className="text-xs text-slate-500">{ROLE_LABELS[user.role]} · {user.fullName}</p>
+          <div className="flex items-center gap-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-accent" aria-hidden />
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">CommunityHub Admin</h1>
+              <p className="text-xs text-slate-500">{ROLE_LABELS[user.role]} · {user.fullName}</p>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-accent-soft"
           >
             Log out
           </button>
         </div>
         <nav className="mx-auto mt-4 flex max-w-5xl gap-1">
           {items.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                  active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  active ? 'bg-accent text-white' : 'text-slate-600 hover:bg-accent-soft'
                 }`}
               >
                 {item.label}
@@ -89,7 +93,7 @@ export default function AppShell({
           })}
         </nav>
       </header>
-      <main className="flex-1 bg-slate-50">{blocked ? null : children}</main>
+      <main className="flex-1 bg-warm-50">{blocked ? null : children}</main>
     </div>
   );
 }

@@ -14,6 +14,7 @@ export default function UsersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [revealedPassword, setRevealedPassword] = useState<{ name: string; password: string } | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
+  const [resettingGuardUser, setResettingGuardUser] = useState<AdminUser | null>(null);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -29,20 +30,41 @@ export default function UsersPage() {
     if (user?.role === 'ADMIN') void loadUsers();
   }, [user, loadUsers]);
 
-  function handleCreated(defaultPassword: string, fullName: string) {
+  function handleCreated(defaultPassword: string | null, fullName: string) {
     setShowCreateModal(false);
-    setRevealedPassword({ name: fullName, password: defaultPassword });
+    if (defaultPassword) setRevealedPassword({ name: fullName, password: defaultPassword });
     void loadUsers();
   }
 
-  async function handleResetPassword(user: AdminUser) {
-    if (!confirm(`Reset ${user.fullName}'s password back to their default (surname in caps)?`)) return;
-    setResettingId(user.id);
+  async function handleResetPassword(target: AdminUser) {
+    if (target.role === 'GUARD') {
+      setResettingGuardUser(target);
+      return;
+    }
+    if (!confirm(`Reset ${target.fullName}'s password back to their default (surname in caps)?`)) return;
+    setResettingId(target.id);
     try {
-      const result = await apiFetch<{ defaultPassword: string }>(`/admin/users/${user.id}/reset-password`, {
+      const result = await apiFetch<{ defaultPassword: string | null }>(`/admin/users/${target.id}/reset-password`, {
         method: 'POST',
       });
-      setRevealedPassword({ name: user.fullName, password: result.defaultPassword });
+      if (result.defaultPassword) setRevealedPassword({ name: target.fullName, password: result.defaultPassword });
+      void loadUsers();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to reset password.');
+    } finally {
+      setResettingId(null);
+    }
+  }
+
+  async function handleSetGuardPassword(newPassword: string) {
+    if (!resettingGuardUser) return;
+    setResettingId(resettingGuardUser.id);
+    try {
+      await apiFetch(`/admin/users/${resettingGuardUser.id}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify({ password: newPassword }),
+      });
+      setResettingGuardUser(null);
       void loadUsers();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to reset password.');
@@ -82,7 +104,7 @@ export default function UsersPage() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
             >
               + New account
             </button>
@@ -114,8 +136,75 @@ export default function UsersPage() {
         {showCreateModal && (
           <CreateUserModal onClose={() => setShowCreateModal(false)} onCreated={handleCreated} />
         )}
+        {resettingGuardUser && (
+          <SetGuardPasswordModal
+            user={resettingGuardUser}
+            onClose={() => setResettingGuardUser(null)}
+            onSubmit={handleSetGuardPassword}
+            submitting={resettingId === resettingGuardUser.id}
+          />
+        )}
       </div>
     </AppShell>
+  );
+}
+
+function SetGuardPasswordModal({
+  user,
+  onClose,
+  onSubmit,
+  submitting,
+}: {
+  user: AdminUser;
+  onClose: () => void;
+  onSubmit: (password: string) => void;
+  submitting: boolean;
+}) {
+  const [password, setPassword] = useState('');
+
+  return (
+    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 px-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onSubmit(password);
+        }}
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+      >
+        <h2 className="text-lg font-semibold text-slate-900">New password for {user.fullName}</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Security guard passwords are set directly by an admin — share the new password with them out-of-band.
+        </p>
+        <div className="mt-5">
+          <label className="block text-sm font-medium text-slate-700">Password</label>
+          <input
+            type="text"
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 6 characters"
+            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+          />
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+          >
+            {submitting ? 'Saving…' : 'Set password'}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 
@@ -170,7 +259,11 @@ function UserSection({
                       disabled={resettingId === user.id}
                       className="text-xs font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50"
                     >
-                      {resettingId === user.id ? 'Resetting…' : 'Reset password'}
+                      {resettingId === user.id
+                        ? 'Saving…'
+                        : user.role === 'GUARD'
+                          ? 'Set password'
+                          : 'Reset password'}
                     </button>
                   )}
                 </td>
