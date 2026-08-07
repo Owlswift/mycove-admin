@@ -5,6 +5,8 @@ import { apiFetch, ApiError } from '@/lib/api';
 import { Invoice, ProjectBreakdown } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import AppShell from '@/components/AppShell';
+import MediaPreview from '@/components/MediaPreview';
+import { readFileAsDataUrl } from '@/lib/read-file';
 
 function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString('en-NG')}`;
@@ -20,6 +22,7 @@ export default function InvoicesPage() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [vendor, setVendor] = useState('');
+  const [receipt, setReceipt] = useState<string | null>(null);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -42,6 +45,12 @@ export default function InvoicesPage() {
     if (user?.role === 'PROJECT_ADMIN') void load();
   }, [user, load]);
 
+  async function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setReceipt(await readFileAsDataUrl(file));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError('');
@@ -55,11 +64,13 @@ export default function InvoicesPage() {
           amount: Number(amount),
           description,
           vendor: vendor.trim() || undefined,
+          mediaBase64: receipt ?? undefined,
         }),
       });
       setAmount('');
       setDescription('');
       setVendor('');
+      setReceipt(null);
       setSuccess(true);
       void load();
     } catch (err) {
@@ -141,6 +152,18 @@ export default function InvoicesPage() {
                     className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700">
+                    Receipt <span className="text-slate-400">(optional)</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleReceiptChange}
+                    className="mt-1 w-full text-sm text-slate-600"
+                  />
+                  {receipt && <MediaPreview dataUrl={receipt} className="mt-2 h-32 w-32 rounded-md object-cover" />}
+                </div>
 
                 {formError && <p className="text-sm text-red-600">{formError}</p>}
                 {success && <p className="text-sm text-green-700">Invoice raised — awaiting review.</p>}
@@ -169,6 +192,7 @@ export default function InvoicesPage() {
                         <th className="px-4 py-3 font-medium">Project</th>
                         <th className="px-4 py-3 font-medium">Description</th>
                         <th className="px-4 py-3 font-medium">Amount</th>
+                        <th className="px-4 py-3 font-medium">Receipt</th>
                         <th className="px-4 py-3 font-medium">Status</th>
                       </tr>
                     </thead>
@@ -178,6 +202,13 @@ export default function InvoicesPage() {
                           <td className="px-4 py-3 font-medium text-slate-900">{invoice.project.title}</td>
                           <td className="px-4 py-3 text-slate-600">{invoice.description}</td>
                           <td className="px-4 py-3 text-slate-600">{formatMoney(invoice.amount)}</td>
+                          <td className="px-4 py-3">
+                            {invoice.mediaBase64 ? (
+                              <MediaPreview dataUrl={invoice.mediaBase64} className="h-10 w-10 rounded object-cover" />
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3">
                             <StatusBadge status={invoice.status} />
                           </td>

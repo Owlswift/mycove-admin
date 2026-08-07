@@ -23,9 +23,12 @@ export default function ProjectsPage() {
     }
   }, []);
 
+  const canManage = user?.role === 'ADMIN';
+  const canCreate = user?.role === 'ADMIN' || user?.role === 'PROJECT_ADMIN';
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN') void load();
+    if (user?.role === 'ADMIN' || user?.role === 'PROJECT_ADMIN') void load();
   }, [user, load]);
 
   if (userLoading || !user) {
@@ -33,7 +36,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'PROJECT_ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div className="flex items-center justify-between">
@@ -41,12 +44,14 @@ export default function ProjectsPage() {
               <h2 className="text-xl font-semibold text-slate-900">Projects</h2>
               <p className="mt-1 text-sm text-slate-500">Community projects, progress, and updates.</p>
             </div>
-            <Link
-              href="/projects/new"
-              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-            >
-              + New project
-            </Link>
+            {canCreate && (
+              <Link
+                href="/projects/new"
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+              >
+                + New project
+              </Link>
+            )}
           </div>
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
@@ -57,7 +62,7 @@ export default function ProjectsPage() {
           {projects && projects.length > 0 && (
             <div className="mt-6 space-y-3">
               {projects.map((p) => (
-                <ProjectCard key={p.id} project={p} onChanged={load} />
+                <ProjectCard key={p.id} project={p} onChanged={load} authorName={user.fullName} canManage={canManage} />
               ))}
             </div>
           )}
@@ -67,17 +72,36 @@ export default function ProjectsPage() {
   );
 }
 
-function ProjectCard({ project, onChanged }: { project: Project; onChanged: () => void }) {
+function ProjectCard({
+  project,
+  onChanged,
+  authorName,
+  canManage,
+}: {
+  project: Project;
+  onChanged: () => void;
+  authorName: string;
+  canManage: boolean;
+}) {
   const [progress, setProgress] = useState(project.progress);
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState('');
 
   const [showReportForm, setShowReportForm] = useState(false);
-  const [author, setAuthor] = useState('Estate Admin');
+  const [author, setAuthor] = useState(authorName);
   const [text, setText] = useState('');
   const [reportMedia, setReportMedia] = useState<string | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState('');
+
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editTitle, setEditTitle] = useState(project.title);
+  const [editDescription, setEditDescription] = useState(project.description);
+  const [editGoal, setEditGoal] = useState(String(project.goal));
+  const [editMedia, setEditMedia] = useState<string | null>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   async function handleUpdateProgress() {
     setProgressError('');
@@ -118,6 +142,49 @@ function ProjectCard({ project, onChanged }: { project: Project; onChanged: () =
       setReportError(err instanceof ApiError ? err.message : 'Failed to add report.');
     } finally {
       setReportLoading(false);
+    }
+  }
+
+  async function handleEditMediaChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditMedia(await readFileAsDataUrl(file));
+  }
+
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    setEditError('');
+    setEditLoading(true);
+    try {
+      await apiFetch(`/projects/${project.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title: editTitle,
+          description: editDescription,
+          goal: Number(editGoal),
+          budget: [{ label: 'General', amount: Number(editGoal) }],
+          ...(editMedia ? { mediaBase64: editMedia } : {}),
+        }),
+      });
+      setShowEditForm(false);
+      onChanged();
+    } catch (err) {
+      setEditError(err instanceof ApiError ? err.message : 'Failed to update project.');
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm(`Delete project "${project.title}"? This cannot be undone.`)) return;
+    setDeleteLoading(true);
+    try {
+      await apiFetch(`/projects/${project.id}`, { method: 'DELETE' });
+      onChanged();
+    } catch (err) {
+      setProgressError(err instanceof ApiError ? err.message : 'Failed to delete project.');
+    } finally {
+      setDeleteLoading(false);
     }
   }
 
@@ -198,6 +265,69 @@ function ProjectCard({ project, onChanged }: { project: Project; onChanged: () =
             className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {reportLoading ? 'Posting…' : 'Post report'}
+          </button>
+        </form>
+      )}
+
+      {canManage && (
+      <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
+        <button
+          onClick={() => setShowEditForm((v) => !v)}
+          className="text-xs font-medium text-accent hover:text-accent-hover"
+        >
+          {showEditForm ? 'Cancel edit' : 'Edit project'}
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={deleteLoading}
+          className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+        >
+          {deleteLoading ? 'Deleting…' : 'Delete project'}
+        </button>
+      </div>
+      )}
+
+      {canManage && showEditForm && (
+        <form onSubmit={handleEdit} className="mt-3 space-y-2 rounded-md bg-slate-50 p-3">
+          <input
+            type="text"
+            required
+            value={editTitle}
+            onChange={(e) => setEditTitle(e.target.value)}
+            placeholder="Project title"
+            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+          />
+          <textarea
+            required
+            rows={2}
+            value={editDescription}
+            onChange={(e) => setEditDescription(e.target.value)}
+            placeholder="Project description"
+            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+          />
+          <input
+            type="number"
+            required
+            min={1}
+            value={editGoal}
+            onChange={(e) => setEditGoal(e.target.value)}
+            placeholder="Donation goal (₦)"
+            className="w-48 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+          />
+          <input
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleEditMediaChange}
+            className="w-full text-xs text-slate-600"
+          />
+          {editMedia && <MediaPreview dataUrl={editMedia} className="h-24 w-full rounded-md object-cover" />}
+          {editError && <p className="text-xs text-red-600">{editError}</p>}
+          <button
+            type="submit"
+            disabled={editLoading}
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+          >
+            {editLoading ? 'Saving…' : 'Save changes'}
           </button>
         </form>
       )}

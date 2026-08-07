@@ -11,6 +11,7 @@ export interface AdminUser {
   emergencyContactPhone: string | null;
   vehiclePlates: string[];
   mustResetPassword: boolean;
+  active: boolean;
   createdAt: string;
 }
 
@@ -19,6 +20,12 @@ export interface AccessLogEntry {
   visitor: string;
   entryAt: string;
   exitAt: string | null;
+  resident: {
+    id: string;
+    fullName: string;
+    house: string | null;
+    phone: string;
+  };
 }
 
 export interface ProjectBreakdown {
@@ -72,6 +79,7 @@ export interface Invoice {
   amount: number;
   description: string;
   vendor: string | null;
+  mediaBase64: string | null;
   status: InvoiceStatus;
   raisedById: string;
   reviewedById: string | null;
@@ -80,6 +88,55 @@ export interface Invoice {
   project: { title: string };
   raisedBy: { fullName: string };
   reviewedBy: { fullName: string } | null;
+}
+
+export interface FinanceTotals {
+  expected: number;
+  collected: number;
+  outstanding: number;
+}
+
+export interface ResidentDues {
+  id: string;
+  fullName: string;
+  house: string | null;
+  phone: string;
+  duesBalance: number;
+  monthsPaid: number;
+}
+
+export interface DuesRoster {
+  monthlyAmount: number;
+  totals: FinanceTotals;
+  residents: ResidentDues[];
+}
+
+export interface LevyResidentStatus {
+  id: string;
+  fullName: string;
+  house: string | null;
+  paid: boolean;
+  mediaBase64: string | null;
+}
+
+export interface LevyWithStats {
+  id: string;
+  label: string;
+  amount: number;
+  dueDate: string;
+  year: number;
+  totalResidents: number;
+  paidCount: number;
+  unpaidCount: number;
+  collected: number;
+  outstanding: number;
+  residents: LevyResidentStatus[];
+}
+
+export interface LevyRoster {
+  totalResidents: number;
+  totals: FinanceTotals;
+  levies: LevyWithStats[];
 }
 
 export interface PollOption {
@@ -107,6 +164,32 @@ export interface Announcement {
   unread: boolean;
 }
 
+export interface RuleItem {
+  id: string;
+  text: string;
+  order: number;
+}
+
+export interface RulesSection {
+  id: string;
+  title: string;
+  order: number;
+  items: RuleItem[];
+}
+
+export type ComplaintStatus = 'SUBMITTED' | 'IN_REVIEW' | 'RESOLVED';
+
+export interface Complaint {
+  id: string;
+  userId: string;
+  category: string;
+  description: string;
+  ref: string;
+  status: ComplaintStatus;
+  createdAt: string;
+  user: { fullName: string; phone: string; house: string | null };
+}
+
 export type ProjectStatus = 'IN_PROGRESS' | 'COMPLETED';
 
 export interface ProjectReport {
@@ -122,5 +205,16 @@ export interface Project {
   status: ProjectStatus;
   progress: number;
   mediaBase64: string | null;
+  description: string;
+  goal: number;
   reports: ProjectReport[];
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  agenda: string[];
 }

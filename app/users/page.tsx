@@ -15,6 +15,7 @@ export default function UsersPage() {
   const [revealedPassword, setRevealedPassword] = useState<{ name: string; password: string } | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [resettingGuardUser, setResettingGuardUser] = useState<AdminUser | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -53,6 +54,21 @@ export default function UsersPage() {
       setError(err instanceof ApiError ? err.message : 'Failed to reset password.');
     } finally {
       setResettingId(null);
+    }
+  }
+
+  async function handleToggleActive(target: AdminUser) {
+    const revoking = target.active;
+    const verb = revoking ? 'revoke' : 'restore';
+    if (!confirm(`${revoking ? 'Revoke' : 'Restore'} ${target.fullName}'s access to the app?`)) return;
+    setTogglingId(target.id);
+    try {
+      await apiFetch(`/admin/users/${target.id}/${revoking ? 'revoke' : 'restore'}`, { method: 'POST' });
+      void loadUsers();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : `Failed to ${verb} access.`);
+    } finally {
+      setTogglingId(null);
     }
   }
 
@@ -128,9 +144,33 @@ export default function UsersPage() {
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
 
-          <UserSection title="Residents" users={residents} onReset={handleResetPassword} resettingId={resettingId} />
-          <UserSection title="Security Guards" users={guards} onReset={handleResetPassword} resettingId={resettingId} />
-          <UserSection title="Staff" users={admins} onReset={handleResetPassword} resettingId={resettingId} />
+          <UserSection
+            title="Residents"
+            users={residents}
+            onReset={handleResetPassword}
+            resettingId={resettingId}
+            onToggleActive={handleToggleActive}
+            togglingId={togglingId}
+            currentUserId={user.id}
+          />
+          <UserSection
+            title="Security Guards"
+            users={guards}
+            onReset={handleResetPassword}
+            resettingId={resettingId}
+            onToggleActive={handleToggleActive}
+            togglingId={togglingId}
+            currentUserId={user.id}
+          />
+          <UserSection
+            title="Staff"
+            users={admins}
+            onReset={handleResetPassword}
+            resettingId={resettingId}
+            onToggleActive={handleToggleActive}
+            togglingId={togglingId}
+            currentUserId={user.id}
+          />
         </div>
 
         {showCreateModal && (
@@ -213,11 +253,17 @@ function UserSection({
   users,
   onReset,
   resettingId,
+  onToggleActive,
+  togglingId,
+  currentUserId,
 }: {
   title: string;
   users: AdminUser[];
   onReset: (user: AdminUser) => void;
   resettingId: string | null;
+  onToggleActive: (user: AdminUser) => void;
+  togglingId: string | null;
+  currentUserId: string;
 }) {
   if (users.length === 0) return null;
 
@@ -233,16 +279,21 @@ function UserSection({
               <th className="px-4 py-3 font-medium">House</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium"></th>
+              <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {users.map((user) => (
-              <tr key={user.id}>
+              <tr key={user.id} className={user.active ? undefined : 'bg-red-50/40'}>
                 <td className="px-4 py-3 font-medium text-slate-900">{user.fullName}</td>
                 <td className="px-4 py-3 text-slate-600">{user.phone}</td>
                 <td className="px-4 py-3 text-slate-600">{user.house ?? '—'}</td>
                 <td className="px-4 py-3">
-                  {user.mustResetPassword ? (
+                  {!user.active ? (
+                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                      Revoked
+                    </span>
+                  ) : user.mustResetPassword ? (
                     <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                       Awaiting first login
                     </span>
@@ -253,7 +304,7 @@ function UserSection({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {user.role !== 'ADMIN' && (
+                  {user.role !== 'ADMIN' && user.active && (
                     <button
                       onClick={() => onReset(user)}
                       disabled={resettingId === user.id}
@@ -264,6 +315,19 @@ function UserSection({
                         : user.role === 'GUARD'
                           ? 'Set password'
                           : 'Reset password'}
+                    </button>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {user.id !== currentUserId && (
+                    <button
+                      onClick={() => onToggleActive(user)}
+                      disabled={togglingId === user.id}
+                      className={`text-xs font-medium disabled:opacity-50 ${
+                        user.active ? 'text-red-600 hover:text-red-800' : 'text-green-700 hover:text-green-900'
+                      }`}
+                    >
+                      {togglingId === user.id ? 'Saving…' : user.active ? 'Revoke access' : 'Restore access'}
                     </button>
                   )}
                 </td>

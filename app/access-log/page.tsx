@@ -50,6 +50,7 @@ export default function AccessLogPage() {
                 <thead>
                   <tr className="text-left text-slate-500">
                     <th className="px-4 py-3 font-medium">Visitor</th>
+                    <th className="px-4 py-3 font-medium">Visiting</th>
                     <th className="px-4 py-3 font-medium">Entered</th>
                     <th className="px-4 py-3 font-medium">Exited</th>
                   </tr>
@@ -58,6 +59,17 @@ export default function AccessLogPage() {
                   {entries.map((entry) => (
                     <tr key={entry.id}>
                       <td className="px-4 py-3 font-medium text-slate-900">{entry.visitor}</td>
+                      <td className="px-4 py-3">
+                        <a
+                          href="/users"
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {entry.resident.fullName}
+                        </a>
+                        {entry.resident.house && (
+                          <span className="ml-2 text-xs text-slate-500">{entry.resident.house}</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-slate-600">{formatDateTime(entry.entryAt)}</td>
                       <td className="px-4 py-3 text-slate-600">
                         {entry.exitAt ? (

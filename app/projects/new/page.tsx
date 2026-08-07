@@ -72,7 +72,7 @@ export default function NewProjectPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'PROJECT_ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-2xl">
           <Link href="/projects" className="text-sm font-medium text-accent hover:text-accent-hover">

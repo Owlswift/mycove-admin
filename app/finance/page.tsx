@@ -2,9 +2,11 @@
 
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
+import { downloadCsv } from '@/lib/csv-export';
 import { Invoice, Pledge, TreasurySummary } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import AppShell from '@/components/AppShell';
+import MediaPreview from '@/components/MediaPreview';
 
 function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString('en-NG')}`;
@@ -73,6 +75,29 @@ export default function FinancePage() {
     } finally {
       setAllocLoading(false);
     }
+  }
+
+  function handleExportProjects() {
+    if (!summary) return;
+    downloadCsv(
+      'projects-financial-report.csv',
+      [
+        { key: 'title', label: 'Project' },
+        { key: 'allocated', label: 'Allocated (NGN)' },
+        { key: 'spent', label: 'Spent (NGN)' },
+        { key: 'remaining', label: 'Remaining (NGN)' },
+        { key: 'donated', label: 'Donated (NGN)' },
+        { key: 'pledged', label: 'Pledged (NGN)' },
+      ],
+      summary.projects.map((p) => ({
+        title: p.title,
+        allocated: p.allocated,
+        spent: p.spent,
+        remaining: p.remaining,
+        donated: p.donated,
+        pledged: p.pledged,
+      })),
+    );
   }
 
   async function handleReview(invoiceId: string, action: 'approve' | 'reject') {
@@ -163,7 +188,16 @@ export default function FinancePage() {
 
           {summary && (
             <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Projects</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Projects</h3>
+                <button
+                  onClick={handleExportProjects}
+                  disabled={summary.projects.length === 0}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  Export CSV
+                </button>
+              </div>
               {pledgesError && <p className="mt-2 text-xs text-red-600">{pledgesError}</p>}
               <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -299,6 +333,7 @@ export default function FinancePage() {
                         <th className="px-4 py-3 font-medium">Vendor</th>
                         <th className="px-4 py-3 font-medium">Amount</th>
                         <th className="px-4 py-3 font-medium">Raised by</th>
+                        <th className="px-4 py-3 font-medium">Receipt</th>
                         <th className="px-4 py-3 font-medium">Status</th>
                         {isFinanceSecretary && <th className="px-4 py-3 font-medium"></th>}
                       </tr>
@@ -311,6 +346,13 @@ export default function FinancePage() {
                           <td className="px-4 py-3 text-slate-600">{invoice.vendor ?? '—'}</td>
                           <td className="px-4 py-3 text-slate-600">{formatMoney(invoice.amount)}</td>
                           <td className="px-4 py-3 text-slate-600">{invoice.raisedBy.fullName}</td>
+                          <td className="px-4 py-3">
+                            {invoice.mediaBase64 ? (
+                              <MediaPreview dataUrl={invoice.mediaBase64} className="h-10 w-10 rounded object-cover" />
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3">
                             <StatusBadge status={invoice.status} />
                           </td>

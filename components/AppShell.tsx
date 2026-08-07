@@ -10,10 +10,15 @@ const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/users', label: 'Users', roles: ['ADMIN'] },
   { href: '/access-log', label: 'Access Log', roles: ['ADMIN'] },
   { href: '/announcements', label: 'Announcements', roles: ['ADMIN'] },
+  { href: '/meetings', label: 'Meetings', roles: ['ADMIN'] },
+  { href: '/rules', label: 'Rules', roles: ['ADMIN'] },
+  { href: '/complaints', label: 'Complaints', roles: ['ADMIN'] },
   { href: '/polls', label: 'Polls', roles: ['ADMIN'] },
-  { href: '/projects', label: 'Projects', roles: ['ADMIN'] },
+  { href: '/projects', label: 'Projects', roles: ['ADMIN', 'PROJECT_ADMIN'] },
   { href: '/spotlights', label: 'Spotlights', roles: ['ADMIN'] },
   { href: '/finance', label: 'Finance', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
+  { href: '/dues', label: 'Dues', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
+  { href: '/levies', label: 'Levies', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
   { href: '/invoices', label: 'Invoices', roles: ['PROJECT_ADMIN'] },
 ];
 
