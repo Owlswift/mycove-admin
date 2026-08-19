@@ -77,7 +77,7 @@ export default function NewPollPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Closes in (days)</label>
+              <label className="block text-sm font-medium text-slate-700">(days) days to go</label>
               <input
                 type="number"
                 required
