@@ -8,6 +8,7 @@ import { AdminUser, Role } from '@/lib/types';
 
 const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/users', label: 'Users', roles: ['ADMIN'] },
+  { href: '/household-invites', label: 'Household Invites', roles: ['ADMIN'] },
   { href: '/access-log', label: 'Access Log', roles: ['ADMIN'] },
   { href: '/announcements', label: 'Announcements', roles: ['ADMIN'] },
   { href: '/meetings', label: 'Meetings', roles: ['ADMIN'] },

@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { Complaint, ComplaintStatus } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString('en-NG', { dateStyle: 'medium', timeStyle: 'short' });
@@ -27,6 +30,8 @@ export default function ComplaintsPage() {
   const [complaints, setComplaints] = useState<Complaint[] | null>(null);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<ComplaintStatus | 'ALL'>('ALL');
 
   const load = useCallback(async () => {
     try {
@@ -57,6 +62,22 @@ export default function ComplaintsPage() {
     }
   }
 
+  const filtered = useMemo(() => {
+    if (!complaints) return [];
+    const q = search.trim().toLowerCase();
+    return complaints.filter((c) => {
+      if (status !== 'ALL' && c.status !== status) return false;
+      if (!q) return true;
+      return (
+        c.category.toLowerCase().includes(q) ||
+        c.ref.toLowerCase().includes(q) ||
+        c.user.fullName.toLowerCase().includes(q)
+      );
+    });
+  }, [complaints, search, status]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
+
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
   }
@@ -65,11 +86,28 @@ export default function ComplaintsPage() {
     <AppShell user={user} allow={['ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">Complaints</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Resident complaints — update the status as they're addressed.
-            </p>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">Complaints</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Resident complaints — update the status as they're addressed.
+              </p>
+            </div>
+            {complaints && complaints.length > 0 && (
+              <div className="flex gap-2">
+                <SearchInput value={search} onChange={setSearch} placeholder="Search category, ref, resident…" />
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as ComplaintStatus | 'ALL')}
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                >
+                  <option value="ALL">All statuses</option>
+                  <option value="SUBMITTED">Submitted</option>
+                  <option value="IN_REVIEW">In Review</option>
+                  <option value="RESOLVED">Resolved</option>
+                </select>
+              </div>
+            )}
           </div>
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
@@ -77,9 +115,12 @@ export default function ComplaintsPage() {
           {complaints && complaints.length === 0 && (
             <p className="mt-6 text-sm text-slate-500">No complaints submitted yet.</p>
           )}
-          {complaints && complaints.length > 0 && (
+          {complaints && complaints.length > 0 && filtered.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No complaints match your search/filter.</p>
+          )}
+          {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
-              {complaints.map((c) => (
+              {pageItems.map((c) => (
                 <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
@@ -133,6 +174,14 @@ export default function ComplaintsPage() {
                 </div>
               ))}
             </div>
+          )}
+          {filtered.length > 0 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalLabel={`${filtered.length} complaint${filtered.length === 1 ? '' : 's'}`}
+            />
           )}
         </div>
       </div>

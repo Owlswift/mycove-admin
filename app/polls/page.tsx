@@ -1,16 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
 import { Poll } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
+
+type StatusFilter = 'ALL' | 'OPEN' | 'CLOSED';
 
 export default function PollsPage() {
   const { user, loading: userLoading } = useCurrentUser();
   const [polls, setPolls] = useState<Poll[] | null>(null);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('ALL');
 
   const loadPolls = useCallback(async () => {
     try {
@@ -26,6 +33,20 @@ export default function PollsPage() {
     if (user?.role === 'ADMIN') void loadPolls();
   }, [user, loadPolls]);
 
+  const filtered = useMemo(() => {
+    if (!polls) return [];
+    const q = search.trim().toLowerCase();
+    return polls.filter((p) => {
+      const closed = p.closesIn === 'Closed';
+      if (status === 'OPEN' && closed) return false;
+      if (status === 'CLOSED' && !closed) return false;
+      if (!q) return true;
+      return p.question.toLowerCase().includes(q);
+    });
+  }, [polls, search, status]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
+
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
   }
@@ -34,17 +55,33 @@ export default function PollsPage() {
     <AppShell user={user} allow={['ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Polls</h2>
               <p className="mt-1 text-sm text-slate-500">Resident polls and live vote results.</p>
             </div>
-            <Link
-              href="/polls/new"
-              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-            >
-              + New poll
-            </Link>
+            <div className="flex items-center gap-2">
+              {polls && polls.length > 0 && (
+                <>
+                  <SearchInput value={search} onChange={setSearch} placeholder="Search question…" />
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as StatusFilter)}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                  >
+                    <option value="ALL">All</option>
+                    <option value="OPEN">Open</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                </>
+              )}
+              <Link
+                href="/polls/new"
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+              >
+                + New poll
+              </Link>
+            </div>
           </div>
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
@@ -52,9 +89,12 @@ export default function PollsPage() {
           {polls && polls.length === 0 && (
             <p className="mt-6 text-sm text-slate-500">No polls created yet.</p>
           )}
-          {polls && polls.length > 0 && (
+          {polls && polls.length > 0 && filtered.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No polls match your search/filter.</p>
+          )}
+          {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
-              {polls.map((poll) => (
+              {pageItems.map((poll) => (
                 <div key={poll.id} className="rounded-lg border border-slate-200 bg-white p-4">
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-slate-900">{poll.question}</p>
@@ -83,6 +123,14 @@ export default function PollsPage() {
                 </div>
               ))}
             </div>
+          )}
+          {filtered.length > 0 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalLabel={`${filtered.length} poll${filtered.length === 1 ? '' : 's'}`}
+            />
           )}
         </div>
       </div>

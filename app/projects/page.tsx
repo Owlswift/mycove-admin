@@ -1,18 +1,25 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
 import { Project } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
 import MediaPreview from '@/components/MediaPreview';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
 import { readFileAsDataUrl } from '@/lib/read-file';
+
+type StatusFilter = 'ALL' | 'IN_PROGRESS' | 'COMPLETED';
 
 export default function ProjectsPage() {
   const { user, loading: userLoading } = useCurrentUser();
   const [projects, setProjects] = useState<Project[] | null>(null);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<StatusFilter>('ALL');
 
   const load = useCallback(async () => {
     try {
@@ -31,6 +38,18 @@ export default function ProjectsPage() {
     if (user?.role === 'ADMIN' || user?.role === 'PROJECT_ADMIN') void load();
   }, [user, load]);
 
+  const filtered = useMemo(() => {
+    if (!projects) return [];
+    const q = search.trim().toLowerCase();
+    return projects.filter((p) => {
+      if (status !== 'ALL' && p.status !== status) return false;
+      if (!q) return true;
+      return p.title.toLowerCase().includes(q);
+    });
+  }, [projects, search, status]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
+
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
   }
@@ -39,19 +58,35 @@ export default function ProjectsPage() {
     <AppShell user={user} allow={['ADMIN', 'PROJECT_ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Projects</h2>
               <p className="mt-1 text-sm text-slate-500">Community projects, progress, and updates.</p>
             </div>
-            {canCreate && (
-              <Link
-                href="/projects/new"
-                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-              >
-                + New project
-              </Link>
-            )}
+            <div className="flex items-center gap-2">
+              {projects && projects.length > 0 && (
+                <>
+                  <SearchInput value={search} onChange={setSearch} placeholder="Search title…" />
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as StatusFilter)}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                  >
+                    <option value="ALL">All</option>
+                    <option value="IN_PROGRESS">In progress</option>
+                    <option value="COMPLETED">Completed</option>
+                  </select>
+                </>
+              )}
+              {canCreate && (
+                <Link
+                  href="/projects/new"
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+                >
+                  + New project
+                </Link>
+              )}
+            </div>
           </div>
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
@@ -59,12 +94,23 @@ export default function ProjectsPage() {
           {projects && projects.length === 0 && (
             <p className="mt-6 text-sm text-slate-500">No projects created yet.</p>
           )}
-          {projects && projects.length > 0 && (
+          {projects && projects.length > 0 && filtered.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No projects match your search/filter.</p>
+          )}
+          {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
-              {projects.map((p) => (
+              {pageItems.map((p) => (
                 <ProjectCard key={p.id} project={p} onChanged={load} authorName={user.fullName} canManage={canManage} />
               ))}
             </div>
+          )}
+          {filtered.length > 0 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalLabel={`${filtered.length} project${filtered.length === 1 ? '' : 's'}`}
+            />
           )}
         </div>
       </div>

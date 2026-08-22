@@ -4,8 +4,11 @@ import { useEffect, useState, useCallback } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { AdminUser } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import CreateUserModal from '@/components/CreateUserModal';
 import AppShell from '@/components/AppShell';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
 
 export default function UsersPage() {
   const { user, loading: userLoading } = useCurrentUser();
@@ -16,6 +19,7 @@ export default function UsersPage() {
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [resettingGuardUser, setResettingGuardUser] = useState<AdminUser | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   const loadUsers = useCallback(async () => {
     try {
@@ -105,9 +109,18 @@ export default function UsersPage() {
     );
   }
 
-  const residents = users?.filter((u) => u.role === 'RESIDENT') ?? [];
-  const guards = users?.filter((u) => u.role === 'GUARD') ?? [];
-  const admins = users?.filter((u) => u.role === 'ADMIN' || u.role === 'FINANCE_SECRETARY' || u.role === 'PROJECT_ADMIN') ?? [];
+  const q = search.trim().toLowerCase();
+  const searched =
+    users?.filter(
+      (u) =>
+        !q ||
+        u.fullName.toLowerCase().includes(q) ||
+        u.phone.toLowerCase().includes(q) ||
+        (u.house?.toLowerCase().includes(q) ?? false),
+    ) ?? [];
+  const residents = searched.filter((u) => u.role === 'RESIDENT');
+  const guards = searched.filter((u) => u.role === 'GUARD');
+  const admins = searched.filter((u) => u.role === 'ADMIN' || u.role === 'FINANCE_SECRETARY' || u.role === 'PROJECT_ADMIN');
 
   return (
     <AppShell user={user} allow={['ADMIN']}>
@@ -118,12 +131,15 @@ export default function UsersPage() {
               <h2 className="text-xl font-semibold text-slate-900">Users</h2>
               <p className="mt-1 text-sm text-slate-500">Manage resident, guard, and staff accounts.</p>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-            >
-              + New account
-            </button>
+            <div className="flex items-center gap-2">
+              <SearchInput value={search} onChange={setSearch} placeholder="Search name, phone, house…" />
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+              >
+                + New account
+              </button>
+            </div>
           </div>
 
           {revealedPassword && (
@@ -143,6 +159,10 @@ export default function UsersPage() {
           )}
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+
+          {q && searched.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No users match &quot;{search}&quot;.</p>
+          )}
 
           <UserSection
             title="Residents"
@@ -265,11 +285,15 @@ function UserSection({
   togglingId: string | null;
   currentUserId: string;
 }) {
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(users);
+
   if (users.length === 0) return null;
 
   return (
     <div className="mt-8">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{title}</h2>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+        {title} <span className="font-normal normal-case text-slate-400">({users.length})</span>
+      </h2>
       <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full divide-y divide-slate-200 text-sm">
           <thead>
@@ -283,7 +307,7 @@ function UserSection({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {users.map((user) => (
+            {pageItems.map((user) => (
               <tr key={user.id} className={user.active ? undefined : 'bg-red-50/40'}>
                 <td className="px-4 py-3 font-medium text-slate-900">{user.fullName}</td>
                 <td className="px-4 py-3 text-slate-600">{user.phone}</td>
@@ -335,6 +359,11 @@ function UserSection({
             ))}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div className="border-t border-slate-200 px-4 py-3">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
+        )}
       </div>
     </div>
   );

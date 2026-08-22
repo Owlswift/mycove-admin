@@ -1,18 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
 import { Spotlight } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
 import MediaPreview from '@/components/MediaPreview';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
+
+type CategoryFilter = 'ALL' | 'PERSON' | 'BUSINESS';
+type ActiveFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
 
 export default function SpotlightsPage() {
   const { user, loading: userLoading } = useCurrentUser();
   const [spotlights, setSpotlights] = useState<Spotlight[] | null>(null);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState<CategoryFilter>('ALL');
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('ALL');
 
   const load = useCallback(async () => {
     try {
@@ -52,6 +61,20 @@ export default function SpotlightsPage() {
     }
   }
 
+  const filtered = useMemo(() => {
+    if (!spotlights) return [];
+    const q = search.trim().toLowerCase();
+    return spotlights.filter((s) => {
+      if (category !== 'ALL' && s.category !== category) return false;
+      if (activeFilter === 'ACTIVE' && !s.active) return false;
+      if (activeFilter === 'INACTIVE' && s.active) return false;
+      if (!q) return true;
+      return s.name.toLowerCase().includes(q);
+    });
+  }, [spotlights, search, category, activeFilter]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
+
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
   }
@@ -60,7 +83,7 @@ export default function SpotlightsPage() {
     <AppShell user={user} allow={['ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Spotlights</h2>
               <p className="mt-1 text-sm text-slate-500">
@@ -75,14 +98,41 @@ export default function SpotlightsPage() {
             </Link>
           </div>
 
+          {spotlights && spotlights.length > 0 && (
+            <div className="mt-4 flex gap-2">
+              <SearchInput value={search} onChange={setSearch} placeholder="Search name…" />
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as CategoryFilter)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+              >
+                <option value="ALL">All categories</option>
+                <option value="PERSON">Person</option>
+                <option value="BUSINESS">Business</option>
+              </select>
+              <select
+                value={activeFilter}
+                onChange={(e) => setActiveFilter(e.target.value as ActiveFilter)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+              >
+                <option value="ALL">Active & inactive</option>
+                <option value="ACTIVE">Active only</option>
+                <option value="INACTIVE">Inactive only</option>
+              </select>
+            </div>
+          )}
+
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
           {spotlights === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
           {spotlights && spotlights.length === 0 && (
             <p className="mt-6 text-sm text-slate-500">No spotlights created yet.</p>
           )}
-          {spotlights && spotlights.length > 0 && (
+          {spotlights && spotlights.length > 0 && filtered.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No spotlights match your search/filter.</p>
+          )}
+          {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
-              {spotlights.map((s) => (
+              {pageItems.map((s) => (
                 <div key={s.id} className="flex items-start gap-4 rounded-lg border border-slate-200 bg-white p-4">
                   {s.imageBase64 && (
                     <MediaPreview dataUrl={s.imageBase64} className="h-16 w-16 shrink-0 rounded-full object-cover" />
@@ -123,6 +173,14 @@ export default function SpotlightsPage() {
                 </div>
               ))}
             </div>
+          )}
+          {filtered.length > 0 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalLabel={`${filtered.length} spotlight${filtered.length === 1 ? '' : 's'}`}
+            />
           )}
         </div>
       </div>

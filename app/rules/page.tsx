@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { RulesSection } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
 
 interface SectionForm {
   title: string;
@@ -24,6 +27,7 @@ export default function RulesPage() {
   const [showEditor, setShowEditor] = useState(false);
   const [form, setForm] = useState<SectionForm>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -121,6 +125,17 @@ export default function RulesPage() {
     }
   }
 
+  const filtered = useMemo(() => {
+    if (!sections) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return sections;
+    return sections.filter(
+      (s) => s.title.toLowerCase().includes(q) || s.items.some((i) => i.text.toLowerCase().includes(q)),
+    );
+  }, [sections, search]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
+
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
   }
@@ -129,21 +144,26 @@ export default function RulesPage() {
     <AppShell user={user} allow={['ADMIN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Rules & Regulations</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Manage the estate rules — formatting (bold, lists, headings) is preserved on the mobile app.
               </p>
             </div>
-            {!editingId && (
-              <button
-                onClick={startCreate}
-                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-              >
-                + New section
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {sections && sections.length > 0 && !showEditor && (
+                <SearchInput value={search} onChange={setSearch} placeholder="Search title or rule text…" />
+              )}
+              {!editingId && (
+                <button
+                  onClick={startCreate}
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+                >
+                  + New section
+                </button>
+              )}
+            </div>
           </div>
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
@@ -222,9 +242,12 @@ export default function RulesPage() {
           {sections && sections.length === 0 && !editingId && (
             <p className="mt-6 text-sm text-slate-500">No rules sections yet. Create one to get started.</p>
           )}
-          {sections && sections.length > 0 && (
+          {sections && sections.length > 0 && filtered.length === 0 && (
+            <p className="mt-6 text-sm text-slate-500">No sections match your search.</p>
+          )}
+          {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
-              {sections.map((section) => (
+              {pageItems.map((section) => (
                 <div key={section.id} className="rounded-lg border border-slate-200 bg-white p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-medium text-slate-900">{section.title}</p>
@@ -255,6 +278,14 @@ export default function RulesPage() {
                 </div>
               ))}
             </div>
+          )}
+          {filtered.length > 0 && (
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              totalLabel={`${filtered.length} section${filtered.length === 1 ? '' : 's'}`}
+            />
           )}
         </div>
       </div>

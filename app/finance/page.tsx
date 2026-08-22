@@ -1,12 +1,17 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { downloadCsv } from '@/lib/csv-export';
 import { Invoice, Pledge, TreasurySummary } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
 import MediaPreview from '@/components/MediaPreview';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
+
+type InvoiceStatusFilter = 'ALL' | Invoice['status'];
 
 function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString('en-NG')}`;
@@ -35,6 +40,10 @@ export default function FinancePage() {
   const [fulfillingId, setFulfillingId] = useState<string | null>(null);
 
   const isFinanceSecretary = user?.role === 'FINANCE_SECRETARY';
+
+  const [projectSearch, setProjectSearch] = useState('');
+  const [invoiceSearch, setInvoiceSearch] = useState('');
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<InvoiceStatusFilter>('ALL');
 
   const load = useCallback(async () => {
     try {
@@ -158,6 +167,29 @@ export default function FinancePage() {
     }
   }
 
+  const filteredProjects = useMemo(() => {
+    if (!summary) return [];
+    const q = projectSearch.trim().toLowerCase();
+    if (!q) return summary.projects;
+    return summary.projects.filter((p) => p.title.toLowerCase().includes(q));
+  }, [summary, projectSearch]);
+  const projectsPage = usePaginatedList(filteredProjects);
+
+  const filteredInvoices = useMemo(() => {
+    if (!invoices) return [];
+    const q = invoiceSearch.trim().toLowerCase();
+    return invoices.filter((inv) => {
+      if (invoiceStatusFilter !== 'ALL' && inv.status !== invoiceStatusFilter) return false;
+      if (!q) return true;
+      return (
+        inv.description.toLowerCase().includes(q) ||
+        inv.project.title.toLowerCase().includes(q) ||
+        (inv.vendor?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [invoices, invoiceSearch, invoiceStatusFilter]);
+  const invoicesPage = usePaginatedList(filteredInvoices);
+
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
   }
@@ -188,17 +220,26 @@ export default function FinancePage() {
 
           {summary && (
             <div className="mt-8">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Projects</h3>
-                <button
-                  onClick={handleExportProjects}
-                  disabled={summary.projects.length === 0}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  Export CSV
-                </button>
+                <div className="flex items-center gap-2">
+                  {summary.projects.length > 0 && (
+                    <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search project…" />
+                  )}
+                  <button
+                    onClick={handleExportProjects}
+                    disabled={summary.projects.length === 0}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Export CSV
+                  </button>
+                </div>
               </div>
               {pledgesError && <p className="mt-2 text-xs text-red-600">{pledgesError}</p>}
+              {summary.projects.length > 0 && filteredProjects.length === 0 && (
+                <p className="mt-3 text-sm text-slate-500">No projects match your search.</p>
+              )}
+              {filteredProjects.length > 0 && (
               <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead>
@@ -213,7 +254,7 @@ export default function FinancePage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {summary.projects.map((p) => (
+                    {projectsPage.pageItems.map((p) => (
                       <Fragment key={p.id}>
                         <tr>
                           <td className="px-4 py-3 font-medium text-slate-900">{p.title}</td>
@@ -250,7 +291,16 @@ export default function FinancePage() {
                     ))}
                   </tbody>
                 </table>
+                <div className="border-t border-slate-200 px-4 py-3">
+                  <Pagination
+                    page={projectsPage.page}
+                    totalPages={projectsPage.totalPages}
+                    onPageChange={projectsPage.setPage}
+                    totalLabel={`${filteredProjects.length} project${filteredProjects.length === 1 ? '' : 's'}`}
+                  />
+                </div>
               </div>
+              )}
             </div>
           )}
 
@@ -320,9 +370,32 @@ export default function FinancePage() {
 
           {invoices && (
             <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Invoices</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Invoices</h3>
+                {invoices.length > 0 && (
+                  <div className="flex gap-2">
+                    <SearchInput
+                      value={invoiceSearch}
+                      onChange={setInvoiceSearch}
+                      placeholder="Search project, description, vendor…"
+                    />
+                    <select
+                      value={invoiceStatusFilter}
+                      onChange={(e) => setInvoiceStatusFilter(e.target.value as InvoiceStatusFilter)}
+                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                    >
+                      <option value="ALL">All statuses</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
+                  </div>
+                )}
+              </div>
               {invoices.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">No invoices raised yet.</p>
+              ) : filteredInvoices.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">No invoices match your search/filter.</p>
               ) : (
                 <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
                   <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -339,7 +412,7 @@ export default function FinancePage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {invoices.map((invoice) => (
+                      {invoicesPage.pageItems.map((invoice) => (
                         <tr key={invoice.id}>
                           <td className="px-4 py-3 font-medium text-slate-900">{invoice.project.title}</td>
                           <td className="px-4 py-3 text-slate-600">{invoice.description}</td>
@@ -382,6 +455,14 @@ export default function FinancePage() {
                       ))}
                     </tbody>
                   </table>
+                  <div className="border-t border-slate-200 px-4 py-3">
+                    <Pagination
+                      page={invoicesPage.page}
+                      totalPages={invoicesPage.totalPages}
+                      onPageChange={invoicesPage.setPage}
+                      totalLabel={`${filteredInvoices.length} invoice${filteredInvoices.length === 1 ? '' : 's'}`}
+                    />
+                  </div>
                 </div>
               )}
             </div>

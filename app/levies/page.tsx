@@ -1,13 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { downloadCsv } from '@/lib/csv-export';
 import { LevyRoster, LevyResidentStatus } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
 import MediaPreview from '@/components/MediaPreview';
+import Pagination from '@/components/Pagination';
 import RecordLevyPaymentModal from '@/components/RecordLevyPaymentModal';
+import SearchInput from '@/components/SearchInput';
 
 interface MarkPaidTarget {
   levyId: string;
@@ -48,6 +51,7 @@ export default function LeviesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [markPaidTarget, setMarkPaidTarget] = useState<MarkPaidTarget | null>(null);
+  const [search, setSearch] = useState('');
 
   const isFinanceSecretary = user?.role === 'FINANCE_SECRETARY';
 
@@ -98,6 +102,15 @@ export default function LeviesPage() {
       setDeletingId(null);
     }
   }
+
+  const filteredLevies = useMemo(() => {
+    if (!roster) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return roster.levies;
+    return roster.levies.filter((l) => l.label.toLowerCase().includes(q));
+  }, [roster, search]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filteredLevies);
 
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
@@ -249,14 +262,21 @@ export default function LeviesPage() {
 
           {roster && (
             <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-                Levies in {year}
-              </h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                  Levies in {year}
+                </h3>
+                {roster.levies.length > 0 && (
+                  <SearchInput value={search} onChange={setSearch} placeholder="Search levy label…" />
+                )}
+              </div>
               {roster.levies.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">No levies raised in {year} yet.</p>
+              ) : filteredLevies.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">No levies match your search.</p>
               ) : (
                 <div className="mt-3 space-y-3">
-                  {roster.levies.map((levy) => (
+                  {pageItems.map((levy) => (
                     <div key={levy.id} className="rounded-lg border border-slate-200 bg-white p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div>
@@ -315,6 +335,14 @@ export default function LeviesPage() {
                     </div>
                   ))}
                 </div>
+              )}
+              {filteredLevies.length > 0 && (
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  totalLabel={`${filteredLevies.length} lev${filteredLevies.length === 1 ? 'y' : 'ies'}`}
+                />
               )}
             </div>
           )}

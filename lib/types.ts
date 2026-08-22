@@ -218,3 +218,23 @@ export interface Meeting {
   location: string;
   agenda: string[];
 }
+
+export type HouseholdInviteStatus = 'PENDING_ADMIN_APPROVAL' | 'APPROVED' | 'REJECTED' | 'ACCEPTED';
+
+export interface HouseholdInvite {
+  id: string;
+  invitedPhone: string;
+  invitedFullName: string;
+  status: HouseholdInviteStatus;
+  createdAt: string;
+  respondedAt: string | null;
+  invitedBy: { fullName: string; house: string | null; phone: string };
+}
+
+export interface HouseholdMember {
+  id: string;
+  fullName: string;
+  phone: string;
+  joinedAt: string;
+  invitedBy: { fullName: string; house: string | null };
+}

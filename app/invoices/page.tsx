@@ -1,12 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { Invoice, ProjectBreakdown } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
 import MediaPreview from '@/components/MediaPreview';
+import Pagination from '@/components/Pagination';
+import SearchInput from '@/components/SearchInput';
 import { readFileAsDataUrl } from '@/lib/read-file';
+
+type InvoiceStatusFilter = 'ALL' | Invoice['status'];
 
 function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString('en-NG')}`;
@@ -26,6 +31,8 @@ export default function InvoicesPage() {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<InvoiceStatusFilter>('ALL');
 
   const load = useCallback(async () => {
     try {
@@ -79,6 +86,22 @@ export default function InvoicesPage() {
       setSubmitting(false);
     }
   }
+
+  const filteredInvoices = useMemo(() => {
+    if (!invoices) return [];
+    const q = search.trim().toLowerCase();
+    return invoices.filter((inv) => {
+      if (statusFilter !== 'ALL' && inv.status !== statusFilter) return false;
+      if (!q) return true;
+      return (
+        inv.description.toLowerCase().includes(q) ||
+        inv.project.title.toLowerCase().includes(q) ||
+        (inv.vendor?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  }, [invoices, search, statusFilter]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filteredInvoices);
 
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
@@ -181,9 +204,28 @@ export default function InvoicesPage() {
 
           {invoices && (
             <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">All Invoices</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">All Invoices</h3>
+                {invoices.length > 0 && (
+                  <div className="flex gap-2">
+                    <SearchInput value={search} onChange={setSearch} placeholder="Search project, description, vendor…" />
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value as InvoiceStatusFilter)}
+                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                    >
+                      <option value="ALL">All statuses</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
+                  </div>
+                )}
+              </div>
               {invoices.length === 0 ? (
                 <p className="mt-3 text-sm text-slate-500">No invoices raised yet.</p>
+              ) : filteredInvoices.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">No invoices match your search/filter.</p>
               ) : (
                 <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
                   <table className="min-w-full divide-y divide-slate-200 text-sm">
@@ -197,7 +239,7 @@ export default function InvoicesPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {invoices.map((invoice) => (
+                      {pageItems.map((invoice) => (
                         <tr key={invoice.id}>
                           <td className="px-4 py-3 font-medium text-slate-900">{invoice.project.title}</td>
                           <td className="px-4 py-3 text-slate-600">{invoice.description}</td>
@@ -216,6 +258,14 @@ export default function InvoicesPage() {
                       ))}
                     </tbody>
                   </table>
+                  <div className="border-t border-slate-200 px-4 py-3">
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      onPageChange={setPage}
+                      totalLabel={`${filteredInvoices.length} invoice${filteredInvoices.length === 1 ? '' : 's'}`}
+                    />
+                  </div>
                 </div>
               )}
             </div>

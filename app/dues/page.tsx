@@ -1,12 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { downloadCsv } from '@/lib/csv-export';
 import { DuesRoster, ResidentDues } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
+import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
+import Pagination from '@/components/Pagination';
 import RecordDuesPaymentModal from '@/components/RecordDuesPaymentModal';
+import SearchInput from '@/components/SearchInput';
+
+type DuesStatusFilter = 'ALL' | 'OWING' | 'PAID';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR + 1 - i);
@@ -36,8 +41,15 @@ export default function DuesPage() {
   const [rateSaving, setRateSaving] = useState(false);
 
   const [recordingFor, setRecordingFor] = useState<ResidentDues | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<DuesStatusFilter>('ALL');
 
   const isFinanceSecretary = user?.role === 'FINANCE_SECRETARY';
+  // Recording an off-platform payment (cash, bank transfer) is a
+  // reconciliation task, not a rate-setting one — Admin needs it too since
+  // automated account/payment setup can lag behind a resident actually
+  // paying, unlike the dues-rate control below which stays Finance-only.
+  const canRecordPayment = user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY';
 
   const load = useCallback(async (forYear: number) => {
     try {
@@ -73,11 +85,28 @@ export default function DuesPage() {
     }
   }
 
+  const residents = roster ? [...roster.residents].sort((a, b) => b.duesBalance - a.duesBalance) : null;
+
+  const filtered = useMemo(() => {
+    if (!residents) return [];
+    const q = search.trim().toLowerCase();
+    return residents.filter((r) => {
+      if (statusFilter === 'OWING' && r.duesBalance <= 0) return false;
+      if (statusFilter === 'PAID' && r.duesBalance > 0) return false;
+      if (!q) return true;
+      return (
+        r.fullName.toLowerCase().includes(q) ||
+        (r.house?.toLowerCase().includes(q) ?? false) ||
+        r.phone.toLowerCase().includes(q)
+      );
+    });
+  }, [residents, search, statusFilter]);
+
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
+
   if (userLoading || !user) {
     return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
   }
-
-  const residents = roster ? [...roster.residents].sort((a, b) => b.duesBalance - a.duesBalance) : null;
 
   function handleExport() {
     if (!residents) return;
@@ -193,7 +222,26 @@ export default function DuesPage() {
           )}
 
           {residents && residents.length > 0 && (
-            <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+            <div className="mt-6 flex gap-2">
+              <SearchInput value={search} onChange={setSearch} placeholder="Search name, house, phone…" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as DuesStatusFilter)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+              >
+                <option value="ALL">All</option>
+                <option value="OWING">Owing</option>
+                <option value="PAID">Paid up</option>
+              </select>
+            </div>
+          )}
+
+          {residents && residents.length > 0 && filtered.length === 0 && (
+            <p className="mt-4 text-sm text-slate-500">No residents match your search/filter.</p>
+          )}
+
+          {filtered.length > 0 && (
+            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead>
                   <tr className="text-left text-slate-500">
@@ -202,11 +250,11 @@ export default function DuesPage() {
                     <th className="px-4 py-3 font-medium">Phone</th>
                     <th className="px-4 py-3 font-medium">Amount owed</th>
                     <th className="px-4 py-3 font-medium">Months paid</th>
-                    {isFinanceSecretary && <th className="px-4 py-3 font-medium"></th>}
+                    {canRecordPayment && <th className="px-4 py-3 font-medium"></th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {residents.map((r) => (
+                  {pageItems.map((r) => (
                     <tr key={r.id}>
                       <td className="px-4 py-3 font-medium text-slate-900">{r.fullName}</td>
                       <td className="px-4 py-3 text-slate-600">{r.house ?? '—'}</td>
@@ -223,7 +271,7 @@ export default function DuesPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-slate-600">{r.monthsPaid} of 12</td>
-                      {isFinanceSecretary && (
+                      {canRecordPayment && (
                         <td className="px-4 py-3 text-right">
                           <button
                             onClick={() => setRecordingFor(r)}
@@ -237,6 +285,14 @@ export default function DuesPage() {
                   ))}
                 </tbody>
               </table>
+              <div className="border-t border-slate-200 px-4 py-3">
+                <Pagination
+                  page={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                  totalLabel={`${filtered.length} resident${filtered.length === 1 ? '' : 's'}`}
+                />
+              </div>
             </div>
           )}
         </div>
