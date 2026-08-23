@@ -210,6 +210,8 @@ export interface Project {
   reports: ProjectReport[];
 }
 
+export type MeetingAiStatus = 'NOT_PROCESSED' | 'PROCESSED' | 'FAILED';
+
 export interface Meeting {
   id: string;
   title: string;
@@ -217,6 +219,13 @@ export interface Meeting {
   time: string;
   location: string;
   agenda: string[];
+  report: string | null;
+  aiStatus: MeetingAiStatus;
+  aiTopics: string[];
+  aiDecisions: string[];
+  aiActionItems: string[];
+  aiError: string | null;
+  approvedAt: string | null;
 }
 
 export type HouseholdInviteStatus = 'PENDING_ADMIN_APPROVAL' | 'APPROVED' | 'REJECTED' | 'ACCEPTED';

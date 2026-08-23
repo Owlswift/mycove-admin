@@ -31,6 +31,9 @@ export default function FinancePage() {
 
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
+  const [remindersLoading, setRemindersLoading] = useState(false);
+  const [remindersMsg, setRemindersMsg] = useState('');
+
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [pledgesByProject, setPledgesByProject] = useState<Record<string, Pledge[]>>({});
   const [pledgesLoading, setPledgesLoading] = useState(false);
@@ -121,6 +124,24 @@ export default function FinancePage() {
     }
   }
 
+  async function handleSendReminders() {
+    setRemindersLoading(true);
+    setRemindersMsg('');
+    try {
+      const result = await apiFetch<{ dues: number; levies: number; pledges: number }>(
+        '/reminders/send-all',
+        { method: 'POST' },
+      );
+      setRemindersMsg(
+        `Reminders sent — ${result.dues} dues, ${result.levies} levies, ${result.pledges} pledges.`,
+      );
+    } catch (err) {
+      setRemindersMsg(err instanceof ApiError ? err.message : 'Failed to send reminders.');
+    } finally {
+      setRemindersLoading(false);
+    }
+  }
+
   async function togglePledges(projectId: string) {
     if (expandedProjectId === projectId) {
       setExpandedProjectId(null);
@@ -198,8 +219,21 @@ export default function FinancePage() {
     <AppShell user={user} allow={['ADMIN', 'FINANCE_SECRETARY']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-4xl">
-          <h2 className="text-xl font-semibold text-slate-900">Finance</h2>
-          <p className="mt-1 text-sm text-slate-500">Estate treasury, project allocations, and invoices.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900">Finance</h2>
+              <p className="mt-1 text-sm text-slate-500">Estate treasury, project allocations, and invoices.</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleSendReminders}
+              disabled={remindersLoading}
+              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {remindersLoading ? 'Sending…' : 'Send payment reminders'}
+            </button>
+          </div>
+          {remindersMsg && <p className="mt-2 text-sm text-emerald-700">{remindersMsg}</p>}
 
           {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
 
