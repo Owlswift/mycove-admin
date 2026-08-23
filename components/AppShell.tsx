@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { clearTokens } from '@/lib/auth';
+import { identifyAdmin, resetAdminIdentity, trackPageView } from '@/lib/analytics';
 import { AdminUser, Role } from '@/lib/types';
 
 const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
@@ -56,7 +57,17 @@ export default function AppShell({
     }
   }, [allow, user.role, router]);
 
+  // Identify the admin once per shell mount and track every route change.
+  useEffect(() => {
+    identifyAdmin(user.id, user.role);
+  }, [user.id, user.role]);
+
+  useEffect(() => {
+    trackPageView(pathname);
+  }, [pathname]);
+
   function handleLogout() {
+    resetAdminIdentity();
     clearTokens();
     router.push('/login');
   }

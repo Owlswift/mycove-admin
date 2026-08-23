@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, ApiError } from '@/lib/api';
 import { saveTokens } from '@/lib/auth';
+import { identifyAdmin, trackAdmin } from '@/lib/analytics';
 
 type AdminRole = 'ADMIN' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN';
 
@@ -20,13 +21,19 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const result = await apiFetch<{ accessToken: string; refreshToken: string }>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ phone, password, role }),
-      });
+      const result = await apiFetch<{ accessToken: string; refreshToken: string; user?: { id: string } }>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify({ phone, password, role }),
+        },
+      );
       saveTokens(result.accessToken, result.refreshToken);
+      trackAdmin('admin_login_success', { role });
+      if (result.user?.id) identifyAdmin(result.user.id, role);
       router.push('/');
     } catch (err) {
+      trackAdmin('admin_login_failed', { role });
       setError(err instanceof ApiError ? err.message : 'Something went wrong.');
     } finally {
       setLoading(false);

@@ -1,4 +1,5 @@
 import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from './auth';
+import { trackAdmin } from './analytics';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3000/api';
 
@@ -62,6 +63,14 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, retri
   }
 
   const data = await res.json().catch(() => null);
+  // Central mutation tracking: every non-GET call through here is logged
+  // with its outcome, so new dashboard pages get analytics for free.
+  if (options.method && options.method !== 'GET') {
+    trackAdmin('admin_action', {
+      action: `${options.method} ${path}`,
+      status: res.ok ? 'success' : 'failed',
+    });
+  }
   if (!res.ok) {
     throw new ApiError((data && (data.message as string)) ?? 'Something went wrong.', res.status);
   }
