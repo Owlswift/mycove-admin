@@ -22,6 +22,7 @@ const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
   { href: '/dues', label: 'Dues', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
   { href: '/levies', label: 'Levies', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
   { href: '/invoices', label: 'Invoices', roles: ['PROJECT_ADMIN'] },
+  { href: '/estate-settings', label: 'Estate Settings', roles: ['ADMIN'] },
 ];
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -59,7 +60,7 @@ export default function AppShell({
 
   // Identify the admin once per shell mount and track every route change.
   useEffect(() => {
-    identifyAdmin(user.id, user.role);
+    identifyAdmin({ adminId: user.id, adminRole: user.role });
   }, [user.id, user.role]);
 
   useEffect(() => {

@@ -30,7 +30,7 @@ export default function LoginPage() {
       );
       saveTokens(result.accessToken, result.refreshToken);
       trackAdmin('admin_login_success', { role });
-      if (result.user?.id) identifyAdmin(result.user.id, role);
+      if (result.user?.id) identifyAdmin({ adminId: result.user.id, adminRole: role });
       router.push('/');
     } catch (err) {
       trackAdmin('admin_login_failed', { role });

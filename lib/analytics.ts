@@ -1,49 +1,82 @@
 import mixpanel from 'mixpanel-browser';
 
-/**
- * Mixpanel project token — a client-side identifier by design (safe to
- * embed; it identifies the *project*, not a secret). Override with
- * NEXT_PUBLIC_MIXPANEL_TOKEN to point at another project.
- */
-const TOKEN =
-  process.env.NEXT_PUBLIC_MIXPANEL_TOKEN ?? '2a61ab19563d6f61331f2d469bf8d24a';
+const token = process.env.NEXT_PUBLIC_MIXPANEL_TOKEN;
+const isEnabled = Boolean(token) && typeof window !== 'undefined';
 
-let initialized = false;
-
-function ensureInit() {
-  if (initialized || typeof window === 'undefined') return;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let client: any = null;
+if (isEnabled) {
   try {
-    mixpanel.init(TOKEN, { debug: false });
-    initialized = true;
+    client = mixpanel.init(token as string, {
+      debug: process.env.NODE_ENV === 'development',
+    });
   } catch {
-    // Analytics must never break the dashboard.
+    // Silently disable if init fails.
   }
 }
 
-export function identifyAdmin(userId: string, role: string) {
-  ensureInit();
+/**
+ * Global properties auto-attached to every admin event via Mixpanel
+ * super-properties. Set by [identifyAdmin] on login/AppShell mount.
+ */
+const globalProps: Record<string, unknown> = {
+  environment: process.env.NODE_ENV ?? 'production',
+};
+
+/**
+ * Attaches admin identity + global properties after login or on AppShell
+ * mount. Global props (admin_id, estate_id, admin_role) are registered as
+ * super-properties so every subsequent track() call inherits them.
+ */
+export function identifyAdmin(props: {
+  adminId: string;
+  estateId?: string;
+  adminRole: string;
+}) {
+  if (!client) return;
   try {
-    mixpanel.identify(userId);
-    mixpanel.people.set({ role, surface: 'admin' });
-    mixpanel.register({ surface: 'admin', role });
-  } catch {}
+    client.identify(props.adminId);
+    globalProps['admin_id'] = props.adminId;
+    if (props.estateId != null) globalProps['estate_id'] = props.estateId;
+    globalProps['admin_role'] = props.adminRole;
+    client.register(props);
+  } catch {
+    // Best-effort.
+  }
 }
 
+/** Clears identity on logout so the next admin isn't attributed to the
+ * previous one's funnel. */
 export function resetAdminIdentity() {
-  if (!initialized) return;
+  if (!client) return;
   try {
-    mixpanel.reset();
-  } catch {}
+    client.reset();
+  } catch {
+    // Best-effort.
+  }
+  globalProps['admin_id'] = undefined;
+  globalProps['estate_id'] = undefined;
+  globalProps['admin_role'] = undefined;
 }
 
+/**
+ * Tracks an admin event. Global properties are auto-attached via
+ * super-properties; [props] should contain only business-specific properties.
+ */
 export function trackAdmin(event: string, props: Record<string, unknown> = {}) {
-  ensureInit();
+  if (!client) return;
   try {
-    mixpanel.track(event, props);
-  } catch {}
+    client.track(event, props);
+  } catch {
+    // Best-effort — never throw into caller.
+  }
 }
 
-/** Route change inside the dashboard shell. */
-export function trackPageView(page: string) {
-  trackAdmin('admin_page_viewed', { page });
+/** Tracks a page view from the admin dashboard. */
+export function trackPageView(page: string, previousPage?: string) {
+  const props: Record<string, unknown> = { screen_name: page };
+  if (previousPage != null) {
+    props['previous_screen'] = previousPage;
+  }
+  trackAdmin('screen_viewed', props);
 }
