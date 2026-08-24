@@ -46,7 +46,7 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm"
       >
-        <h1 className="text-xl font-semibold text-slate-900">CommunityHub Admin</h1>
+        <h1 className="text-xl font-semibold text-slate-900">MyCove Admin</h1>
         <p className="mt-1 text-sm text-slate-500">Sign in to manage resident and guard accounts.</p>
 
         <div className="mt-6 space-y-4">

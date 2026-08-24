@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CommunityHub Admin",
-  description: "Resident and guard account administration for CommunityHub",
+  title: "MyCove Admin",
+  description: "Resident and guard account administration for MyCove",
 };
 
 export default function RootLayout({

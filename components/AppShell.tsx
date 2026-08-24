@@ -83,7 +83,7 @@ export default function AppShell({
           <div className="flex items-center gap-2.5">
             <span className="h-2.5 w-2.5 rounded-full bg-accent" aria-hidden />
             <div>
-              <h1 className="text-lg font-semibold text-slate-900">CommunityHub Admin</h1>
+              <h1 className="text-lg font-semibold text-slate-900">MyCove Admin</h1>
               <p className="text-xs text-slate-500">{ROLE_LABELS[user.role]} · {user.fullName}</p>
             </div>
           </div>

@@ -1,7 +1,7 @@
-# CommunityHub Admin
+# MyCove Admin
 
 A small internal web dashboard for estate staff to register residents and
-security guards on [CommunityHub](../communityhub) — there is no
+security guards on [MyCove](../communityhub) — there is no
 self-registration in the mobile app, so an admin account has to create
 every resident/guard account here first.
 
