@@ -1,10 +1,10 @@
 # MyCove Admin Dashboard — Feature Documentation
 
 > Next.js (App Router) internal web dashboard, port **3001**. Formerly
-> **CommunityHub Admin**.
+> **MyCove Admin**.
 >
-> Sibling docs: [`../communityhub/docs/FEATURES.md`](../../communityhub/docs/FEATURES.md)
-> · [`../communityhub-api/docs/FEATURES.md`](../../communityhub-api/docs/FEATURES.md)
+> Sibling docs: [`../mycove/docs/FEATURES.md`](../../mycove/docs/FEATURES.md)
+> · [`../mycove-api/docs/FEATURES.md`](../../mycove-api/docs/FEATURES.md)
 
 Estate-staff tool for account administration and estate management. Talks to the
 same NestJS API as the mobile app (`NEXT_PUBLIC_API_BASE_URL`, default

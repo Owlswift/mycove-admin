@@ -1,7 +1,7 @@
 # MyCove Admin
 
 A small internal web dashboard for estate staff to register residents and
-security guards on [MyCove](../communityhub) — there is no
+security guards on [MyCove](../mycove) — there is no
 self-registration in the mobile app, so an admin account has to create
 every resident/guard account here first.
 
@@ -17,11 +17,11 @@ every resident/guard account here first.
 The created account is forced to change its password on first login and
 complete the rest of its profile (email, emergency contact, vehicle plates,
 confirm house address) from the mobile app itself — see
-`communityhub`'s force-reset flow.
+`mycove`'s force-reset flow.
 
 ## Running it
 
-Needs the `communityhub-api` backend running (`docker compose up -d` +
+Needs the `mycove-api` backend running (`docker compose up -d` +
 `npm run start:dev` there, Postgres seeded via `npm run prisma:seed`).
 
 ```bash

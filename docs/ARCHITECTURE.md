@@ -3,9 +3,9 @@
 > Next.js (App Router) · React 19 · Tailwind CSS 4
 >
 > Feature inventory: [FEATURES.md](FEATURES.md) · API:
-> [`../../communityhub-api/docs/ARCHITECTURE.md`](../../communityhub-api/docs/ARCHITECTURE.md)
+> [`../../mycove-api/docs/ARCHITECTURE.md`](../../mycove-api/docs/ARCHITECTURE.md)
 > · Mobile app:
-> [`../../communityhub/docs/ARCHITECTURE.md`](../../communityhub/docs/ARCHITECTURE.md)
+> [`../../mycove/docs/ARCHITECTURE.md`](../../mycove/docs/ARCHITECTURE.md)
 
 ## 1. System context
 
