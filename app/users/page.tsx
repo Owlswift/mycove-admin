@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
 import { AdminUser } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
@@ -95,7 +96,7 @@ export default function UsersPage() {
 
   if (userLoading || !user) {
     return (
-      <main className="flex flex-1 items-center justify-center text-slate-500">
+      <main className="flex flex-1 items-center justify-center text-body">
         Loading…
       </main>
     );
@@ -104,7 +105,7 @@ export default function UsersPage() {
   if (users === null && !error) {
     return (
       <AppShell user={user} allow={['ADMIN']}>
-        <div className="flex flex-1 items-center justify-center px-6 py-8 text-slate-500">Loading…</div>
+        <div className="flex flex-1 items-center justify-center px-6 py-8 text-body">Loading…</div>
       </AppShell>
     );
   }
@@ -128,8 +129,8 @@ export default function UsersPage() {
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Users</h2>
-              <p className="mt-1 text-sm text-slate-500">Manage resident, guard, and staff accounts.</p>
+              <h2 className="text-xl font-semibold text-title">Users</h2>
+              <p className="mt-1 text-sm text-body">Manage resident, guard, and staff accounts.</p>
             </div>
             <div className="flex items-center gap-2">
               <SearchInput value={search} onChange={setSearch} placeholder="Search name, phone, house…" />
@@ -158,10 +159,10 @@ export default function UsersPage() {
             </div>
           )}
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
           {q && searched.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No users match &quot;{search}&quot;.</p>
+            <p className="mt-6 text-sm text-body">No users match &quot;{search}&quot;.</p>
           )}
 
           <UserSection
@@ -229,14 +230,14 @@ function SetGuardPasswordModal({
           e.preventDefault();
           onSubmit(password);
         }}
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+        className="w-full max-w-md rounded-xl bg-surface p-6 shadow-lg"
       >
-        <h2 className="text-lg font-semibold text-slate-900">New password for {user.fullName}</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="text-lg font-semibold text-title">New password for {user.fullName}</h2>
+        <p className="mt-1 text-sm text-body">
           Security guard passwords are set directly by an admin — share the new password with them out-of-band.
         </p>
         <div className="mt-5">
-          <label className="block text-sm font-medium text-slate-700">Password</label>
+          <label className="block text-sm font-medium text-text">Password</label>
           <input
             type="text"
             required
@@ -244,14 +245,14 @@ function SetGuardPasswordModal({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="At least 6 characters"
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+            className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
           />
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-4 py-2 text-sm font-medium text-body hover:bg-accent-soft"
           >
             Cancel
           </button>
@@ -291,13 +292,13 @@ function UserSection({
 
   return (
     <div className="mt-8">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
-        {title} <span className="font-normal normal-case text-slate-400">({users.length})</span>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-body">
+        {title} <span className="font-normal normal-case text-body/60">({users.length})</span>
       </h2>
-      <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
+      <div className="mt-3 overflow-x-auto rounded-lg border border-divider bg-surface">
+        <table className="min-w-full divide-y divide-divider text-sm">
           <thead>
-            <tr className="text-left text-slate-500">
+            <tr className="text-left text-body">
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Phone</th>
               <th className="px-4 py-3 font-medium">House</th>
@@ -306,12 +307,16 @@ function UserSection({
               <th className="px-4 py-3 font-medium"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-divider">
             {pageItems.map((user) => (
               <tr key={user.id} className={user.active ? undefined : 'bg-red-50/40'}>
-                <td className="px-4 py-3 font-medium text-slate-900">{user.fullName}</td>
-                <td className="px-4 py-3 text-slate-600">{user.phone}</td>
-                <td className="px-4 py-3 text-slate-600">{user.house ?? '—'}</td>
+                <td className="px-4 py-3 font-medium">
+                  <Link href={`/users/${user.id}`} className="text-title hover:text-accent hover:underline">
+                    {user.fullName}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-body">{user.phone}</td>
+                <td className="px-4 py-3 text-body">{user.house ?? '—'}</td>
                 <td className="px-4 py-3">
                   {!user.active ? (
                     <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
@@ -332,7 +337,7 @@ function UserSection({
                     <button
                       onClick={() => onReset(user)}
                       disabled={resettingId === user.id}
-                      className="text-xs font-medium text-slate-600 hover:text-slate-900 disabled:opacity-50"
+                      className="text-xs font-medium text-body hover:text-title disabled:opacity-50"
                     >
                       {resettingId === user.id
                         ? 'Saving…'
@@ -348,7 +353,7 @@ function UserSection({
                       onClick={() => onToggleActive(user)}
                       disabled={togglingId === user.id}
                       className={`text-xs font-medium disabled:opacity-50 ${
-                        user.active ? 'text-red-600 hover:text-red-800' : 'text-green-700 hover:text-green-900'
+                        user.active ? 'text-danger hover:text-danger' : 'text-green-700 hover:text-green-900'
                       }`}
                     >
                       {togglingId === user.id ? 'Saving…' : user.active ? 'Revoke access' : 'Restore access'}
@@ -360,7 +365,7 @@ function UserSection({
           </tbody>
         </table>
         {totalPages > 1 && (
-          <div className="border-t border-slate-200 px-4 py-3">
+          <div className="border-t border-divider px-4 py-3">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         )}

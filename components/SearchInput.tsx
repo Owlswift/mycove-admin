@@ -12,7 +12,7 @@ export default function SearchInput({ value, onChange, placeholder = 'Search…'
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className={`rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none ${className}`}
+      className={`rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none ${className}`}
     />
   );
 }

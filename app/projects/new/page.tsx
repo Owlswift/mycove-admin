@@ -68,7 +68,7 @@ export default function NewProjectPage() {
   }
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -78,57 +78,57 @@ export default function NewProjectPage() {
           <Link href="/projects" className="text-sm font-medium text-accent hover:text-accent-hover">
             ← Back to projects
           </Link>
-          <h2 className="mt-2 text-xl font-semibold text-slate-900">New Project</h2>
-          <p className="mt-1 text-sm text-slate-500">Residents will see this in the app immediately.</p>
+          <h2 className="mt-2 text-xl font-semibold text-title">New Project</h2>
+          <p className="mt-1 text-sm text-body">Residents will see this in the app immediately.</p>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-slate-200 bg-white p-6">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-lg border border-divider bg-surface p-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700">Title</label>
+              <label className="block text-sm font-medium text-text">Title</label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Estate Road Resurfacing"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Description</label>
+              <label className="block text-sm font-medium text-text">Description</label>
               <textarea
                 required
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What this project covers…"
-                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Cover image or video <span className="text-slate-400">(optional)</span>
+              <label className="block text-sm font-medium text-text">
+                Cover image or video <span className="text-body/70">(optional)</span>
               </label>
               <input
                 type="file"
                 accept="image/*,video/*"
                 onChange={handleMediaChange}
-                className="mt-1 w-full text-sm text-slate-600"
+                className="mt-1 w-full text-sm text-body"
               />
               {media && <MediaPreview dataUrl={media} className="mt-2 h-40 w-full rounded-md object-cover" />}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Donation goal (₦)</label>
+              <label className="block text-sm font-medium text-text">Donation goal (₦)</label>
               <input
                 type="number"
                 required
                 min={1}
                 value={goal}
                 onChange={(e) => setGoal(e.target.value)}
-                className="mt-1 w-48 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                className="mt-1 w-48 rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Budget lines</label>
+              <label className="block text-sm font-medium text-text">Budget lines</label>
               <div className="mt-1 space-y-2">
                 {budget.map((line, i) => (
                   <div key={i} className="flex gap-2">
@@ -137,7 +137,7 @@ export default function NewProjectPage() {
                       value={line.label}
                       onChange={(e) => updateBudgetLine(i, 'label', e.target.value)}
                       placeholder="e.g. Materials"
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                      className="w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     />
                     <input
                       type="number"
@@ -145,13 +145,13 @@ export default function NewProjectPage() {
                       value={line.amount}
                       onChange={(e) => updateBudgetLine(i, 'amount', e.target.value)}
                       placeholder="Amount (₦)"
-                      className="w-40 shrink-0 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                      className="w-40 shrink-0 rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                     />
                     {budget.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeBudgetLine(i)}
-                        className="shrink-0 rounded-md px-2 text-sm text-slate-400 hover:text-red-600"
+                        className="shrink-0 rounded-md px-2 text-sm text-body/70 hover:text-danger"
                       >
                         Remove
                       </button>
@@ -168,7 +168,7 @@ export default function NewProjectPage() {
               </button>
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-danger">{error}</p>}
 
             <button
               type="submit"

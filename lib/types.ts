@@ -13,6 +13,43 @@ export interface AdminUser {
   mustResetPassword: boolean;
   active: boolean;
   createdAt: string;
+  estateName?: string;
+  estateAddress?: string;
+}
+
+export type DuesEntryType = 'CHARGE' | 'PAYMENT';
+
+export interface DuesLedgerEntry {
+  id: string;
+  date: string;
+  desc: string;
+  type: DuesEntryType;
+  amount: number;
+  mediaBase64: string | null;
+  createdAt: string;
+}
+
+export interface LevyPaymentEntry {
+  id: string;
+  mediaBase64: string | null;
+  paidAt: string;
+  levy: { label: string; amount: number; dueDate: string; year: number };
+}
+
+export interface DonationEntry {
+  id: string;
+  amount: number;
+  createdAt: string;
+  project: { title: string };
+}
+
+export interface PledgeEntry {
+  id: string;
+  amount: number;
+  remindedAt: string | null;
+  fulfilledAt: string | null;
+  createdAt: string;
+  project: { title: string };
 }
 
 export interface AccessLogEntry {

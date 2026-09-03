@@ -212,7 +212,7 @@ export default function FinancePage() {
   const invoicesPage = usePaginatedList(filteredInvoices);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -221,21 +221,21 @@ export default function FinancePage() {
         <div className="mx-auto max-w-4xl">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Finance</h2>
-              <p className="mt-1 text-sm text-slate-500">Estate treasury, project allocations, and invoices.</p>
+              <h2 className="text-xl font-semibold text-title">Finance</h2>
+              <p className="mt-1 text-sm text-body">Estate treasury, project allocations, and invoices.</p>
             </div>
             <button
               type="button"
               onClick={handleSendReminders}
               disabled={remindersLoading}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="rounded-lg bg-accent2 px-4 py-2 text-sm font-medium text-white hover:bg-accent2-hover disabled:opacity-50"
             >
               {remindersLoading ? 'Sending…' : 'Send payment reminders'}
             </button>
           </div>
-          {remindersMsg && <p className="mt-2 text-sm text-emerald-700">{remindersMsg}</p>}
+          {remindersMsg && <p className="mt-2 text-sm text-accent-hover">{remindersMsg}</p>}
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
           {summary && (
             <div className="mt-6 grid grid-cols-3 gap-4">
@@ -255,7 +255,7 @@ export default function FinancePage() {
           {summary && (
             <div className="mt-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Projects</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-body">Projects</h3>
                 <div className="flex items-center gap-2">
                   {summary.projects.length > 0 && (
                     <SearchInput value={projectSearch} onChange={setProjectSearch} placeholder="Search project…" />
@@ -263,21 +263,21 @@ export default function FinancePage() {
                   <button
                     onClick={handleExportProjects}
                     disabled={summary.projects.length === 0}
-                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-md border border-divider px-3 py-1.5 text-xs font-medium text-text hover:bg-accent-soft disabled:opacity-50"
                   >
                     Export CSV
                   </button>
                 </div>
               </div>
-              {pledgesError && <p className="mt-2 text-xs text-red-600">{pledgesError}</p>}
+              {pledgesError && <p className="mt-2 text-xs text-danger">{pledgesError}</p>}
               {summary.projects.length > 0 && filteredProjects.length === 0 && (
-                <p className="mt-3 text-sm text-slate-500">No projects match your search.</p>
+                <p className="mt-3 text-sm text-body">No projects match your search.</p>
               )}
               {filteredProjects.length > 0 && (
-              <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-                <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <div className="mt-3 overflow-x-auto rounded-lg border border-divider bg-surface">
+                <table className="min-w-full divide-y divide-divider text-sm">
                   <thead>
-                    <tr className="text-left text-slate-500">
+                    <tr className="text-left text-body">
                       <th className="px-4 py-3 font-medium">Project</th>
                       <th className="px-4 py-3 font-medium">Allocated</th>
                       <th className="px-4 py-3 font-medium">Spent</th>
@@ -287,16 +287,16 @@ export default function FinancePage() {
                       <th className="px-4 py-3 font-medium"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-divider">
                     {projectsPage.pageItems.map((p) => (
                       <Fragment key={p.id}>
                         <tr>
-                          <td className="px-4 py-3 font-medium text-slate-900">{p.title}</td>
-                          <td className="px-4 py-3 text-slate-600">{formatMoney(p.allocated)}</td>
-                          <td className="px-4 py-3 text-slate-600">{formatMoney(p.spent)}</td>
-                          <td className="px-4 py-3 text-slate-600">{formatMoney(p.remaining)}</td>
+                          <td className="px-4 py-3 font-medium text-title">{p.title}</td>
+                          <td className="px-4 py-3 text-body">{formatMoney(p.allocated)}</td>
+                          <td className="px-4 py-3 text-body">{formatMoney(p.spent)}</td>
+                          <td className="px-4 py-3 text-body">{formatMoney(p.remaining)}</td>
                           <td className="px-4 py-3 text-accent2-hover">{formatMoney(p.donated)}</td>
-                          <td className="px-4 py-3 text-slate-500">{formatMoney(p.pledged)}</td>
+                          <td className="px-4 py-3 text-body">{formatMoney(p.pledged)}</td>
                           <td className="px-4 py-3 text-right">
                             <button
                               onClick={() => togglePledges(p.id)}
@@ -308,7 +308,7 @@ export default function FinancePage() {
                         </tr>
                         {expandedProjectId === p.id && (
                           <tr>
-                            <td colSpan={7} className="bg-slate-50 px-4 py-3">
+                            <td colSpan={7} className="bg-warm-50 px-4 py-3">
                               <PledgesBreakdown
                                 loading={pledgesLoading && !pledgesByProject[p.id]}
                                 pledges={pledgesByProject[p.id]}
@@ -325,7 +325,7 @@ export default function FinancePage() {
                     ))}
                   </tbody>
                 </table>
-                <div className="border-t border-slate-200 px-4 py-3">
+                <div className="border-t border-divider px-4 py-3">
                   <Pagination
                     page={projectsPage.page}
                     totalPages={projectsPage.totalPages}
@@ -340,18 +340,18 @@ export default function FinancePage() {
 
           {isFinanceSecretary && summary && (
             <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Allocate Funds</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-body">Allocate Funds</h3>
               <form
                 onSubmit={handleAllocate}
-                className="mt-3 space-y-4 rounded-lg border border-slate-200 bg-white p-6"
+                className="mt-3 space-y-4 rounded-lg border border-divider bg-surface p-6"
               >
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Project</label>
+                  <label className="block text-sm font-medium text-text">Project</label>
                   <select
                     required
                     value={allocProjectId}
                     onChange={(e) => setAllocProjectId(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   >
                     <option value="" disabled>
                       Select a project
@@ -364,7 +364,7 @@ export default function FinancePage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">
+                  <label className="block text-sm font-medium text-text">
                     Amount (max {formatMoney(summary.treasuryBalance)})
                   </label>
                   <input
@@ -373,23 +373,23 @@ export default function FinancePage() {
                     min={1}
                     value={allocAmount}
                     onChange={(e) => setAllocAmount(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">
-                    Note <span className="text-slate-400">(optional)</span>
+                  <label className="block text-sm font-medium text-text">
+                    Note <span className="text-body/70">(optional)</span>
                   </label>
                   <input
                     type="text"
                     value={allocNote}
                     onChange={(e) => setAllocNote(e.target.value)}
                     placeholder="e.g. First phase materials"
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
 
-                {allocError && <p className="text-sm text-red-600">{allocError}</p>}
+                {allocError && <p className="text-sm text-danger">{allocError}</p>}
 
                 <button
                   type="submit"
@@ -405,7 +405,7 @@ export default function FinancePage() {
           {invoices && (
             <div className="mt-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Invoices</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-body">Invoices</h3>
                 {invoices.length > 0 && (
                   <div className="flex gap-2">
                     <SearchInput
@@ -416,7 +416,7 @@ export default function FinancePage() {
                     <select
                       value={invoiceStatusFilter}
                       onChange={(e) => setInvoiceStatusFilter(e.target.value as InvoiceStatusFilter)}
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                      className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
                     >
                       <option value="ALL">All statuses</option>
                       <option value="PENDING">Pending</option>
@@ -427,14 +427,14 @@ export default function FinancePage() {
                 )}
               </div>
               {invoices.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">No invoices raised yet.</p>
+                <p className="mt-3 text-sm text-body">No invoices raised yet.</p>
               ) : filteredInvoices.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">No invoices match your search/filter.</p>
+                <p className="mt-3 text-sm text-body">No invoices match your search/filter.</p>
               ) : (
-                <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <div className="mt-3 overflow-x-auto rounded-lg border border-divider bg-surface">
+                  <table className="min-w-full divide-y divide-divider text-sm">
                     <thead>
-                      <tr className="text-left text-slate-500">
+                      <tr className="text-left text-body">
                         <th className="px-4 py-3 font-medium">Project</th>
                         <th className="px-4 py-3 font-medium">Description</th>
                         <th className="px-4 py-3 font-medium">Vendor</th>
@@ -445,19 +445,19 @@ export default function FinancePage() {
                         {isFinanceSecretary && <th className="px-4 py-3 font-medium"></th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-divider">
                       {invoicesPage.pageItems.map((invoice) => (
                         <tr key={invoice.id}>
-                          <td className="px-4 py-3 font-medium text-slate-900">{invoice.project.title}</td>
-                          <td className="px-4 py-3 text-slate-600">{invoice.description}</td>
-                          <td className="px-4 py-3 text-slate-600">{invoice.vendor ?? '—'}</td>
-                          <td className="px-4 py-3 text-slate-600">{formatMoney(invoice.amount)}</td>
-                          <td className="px-4 py-3 text-slate-600">{invoice.raisedBy.fullName}</td>
+                          <td className="px-4 py-3 font-medium text-title">{invoice.project.title}</td>
+                          <td className="px-4 py-3 text-body">{invoice.description}</td>
+                          <td className="px-4 py-3 text-body">{invoice.vendor ?? '—'}</td>
+                          <td className="px-4 py-3 text-body">{formatMoney(invoice.amount)}</td>
+                          <td className="px-4 py-3 text-body">{invoice.raisedBy.fullName}</td>
                           <td className="px-4 py-3">
                             {invoice.mediaBase64 ? (
                               <MediaPreview dataUrl={invoice.mediaBase64} className="h-10 w-10 rounded object-cover" />
                             ) : (
-                              <span className="text-slate-400">—</span>
+                              <span className="text-body/70">—</span>
                             )}
                           </td>
                           <td className="px-4 py-3">
@@ -477,7 +477,7 @@ export default function FinancePage() {
                                   <button
                                     onClick={() => handleReview(invoice.id, 'reject')}
                                     disabled={reviewingId === invoice.id}
-                                    className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                                    className="text-xs font-medium text-danger hover:text-danger disabled:opacity-50"
                                   >
                                     Reject
                                   </button>
@@ -489,7 +489,7 @@ export default function FinancePage() {
                       ))}
                     </tbody>
                   </table>
-                  <div className="border-t border-slate-200 px-4 py-3">
+                  <div className="border-t border-divider px-4 py-3">
                     <Pagination
                       page={invoicesPage.page}
                       totalPages={invoicesPage.totalPages}
@@ -509,9 +509,9 @@ export default function FinancePage() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    <div className="rounded-lg border border-divider bg-surface p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-body">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-title">{value}</p>
     </div>
   );
 }
@@ -533,21 +533,24 @@ function PledgesBreakdown({
   onRemind: (pledgeId: string) => void;
   onFulfill: (pledgeId: string) => void;
 }) {
-  if (loading) return <p className="text-xs text-slate-500">Loading pledges…</p>;
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(pledges ?? [], 5);
+
+  if (loading) return <p className="text-xs text-body">Loading pledges…</p>;
   if (!pledges || pledges.length === 0) {
-    return <p className="text-xs text-slate-500">No pledges made for this project yet.</p>;
+    return <p className="text-xs text-body">No pledges made for this project yet.</p>;
   }
 
   return (
+    <>
     <ul className="space-y-2">
-      {pledges.map((pl) => (
+      {pageItems.map((pl) => (
         <li key={pl.id} className="flex items-center justify-between gap-3 text-xs">
           <div>
-            <p className="font-medium text-slate-800">
+            <p className="font-medium text-text">
               {pl.user.fullName}
-              {pl.user.house && <span className="text-slate-400"> · {pl.user.house}</span>}
+              {pl.user.house && <span className="text-body/70"> · {pl.user.house}</span>}
             </p>
-            <p className="text-slate-500">
+            <p className="text-body">
               Pledged {formatMoney(pl.amount)}
               {pl.remindedAt && !pl.fulfilledAt && ' · reminded'}
             </p>
@@ -561,7 +564,7 @@ function PledgesBreakdown({
               <button
                 onClick={() => onRemind(pl.id)}
                 disabled={remindingId === pl.id || fulfillingId === pl.id}
-                className="rounded-md border border-slate-300 bg-white px-2 py-1 font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-md border border-divider bg-surface px-2 py-1 font-medium text-body hover:bg-accent-soft disabled:opacity-50"
               >
                 {remindingId === pl.id ? 'Sending…' : remindedIds.has(pl.id) || pl.remindedAt ? 'Remind again' : 'Remind'}
               </button>
@@ -577,6 +580,8 @@ function PledgesBreakdown({
         </li>
       ))}
     </ul>
+    <Pagination page={page} totalPages={totalPages} onPageChange={setPage} totalLabel={`${pledges.length} pledge${pledges.length === 1 ? '' : 's'}`} />
+    </>
   );
 }
 

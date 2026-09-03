@@ -28,9 +28,9 @@ function formatMoney(amount: number): string {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    <div className="rounded-lg border border-divider bg-surface p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-body">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-title">{value}</p>
     </div>
   );
 }
@@ -113,7 +113,7 @@ export default function LeviesPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filteredLevies);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   function handleExport() {
@@ -150,19 +150,19 @@ export default function LeviesPage() {
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Levies</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <h2 className="text-xl font-semibold text-title">Levies</h2>
+              <p className="mt-1 text-sm text-body">
                 One-off charges for a specific purpose (a security upgrade, a Christmas fund) — separate
                 from the recurring annual dues.
               </p>
             </div>
             <div className="flex shrink-0 items-end gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-500">Fiscal year</label>
+                <label className="block text-xs font-medium text-body">Fiscal year</label>
                 <select
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
-                  className="mt-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                  className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
                 >
                   {YEAR_OPTIONS.map((y) => (
                     <option key={y} value={y}>
@@ -174,15 +174,15 @@ export default function LeviesPage() {
               <button
                 onClick={handleExport}
                 disabled={!roster || roster.levies.length === 0}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-md border border-divider px-3 py-1.5 text-sm font-medium text-text hover:bg-accent-soft disabled:opacity-50"
               >
                 Export CSV
               </button>
             </div>
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-          {roster === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+          {roster === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
 
           {roster && (
             <div className="mt-6 grid grid-cols-3 gap-4">
@@ -194,50 +194,50 @@ export default function LeviesPage() {
 
           {isFinanceSecretary && (
             <div className="mt-8">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">New Levy</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-body">New Levy</h3>
               <form
                 onSubmit={handleCreate}
-                className="mt-3 grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-white p-6 sm:grid-cols-4"
+                className="mt-3 grid grid-cols-1 gap-4 rounded-lg border border-divider bg-surface p-6 sm:grid-cols-4"
               >
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Label</label>
+                  <label className="block text-sm font-medium text-text">Label</label>
                   <input
                     type="text"
                     required
                     value={label}
                     onChange={(e) => setLabel(e.target.value)}
                     placeholder="e.g. Generator Fuel Levy"
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Amount</label>
+                  <label className="block text-sm font-medium text-text">Amount</label>
                   <input
                     type="number"
                     required
                     min={1}
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Due date</label>
+                  <label className="block text-sm font-medium text-text">Due date</label>
                   <input
                     type="text"
                     required
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
                     placeholder="e.g. 20 Sep"
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Year</label>
+                  <label className="block text-sm font-medium text-text">Year</label>
                   <select
                     value={levyYear}
                     onChange={(e) => setLevyYear(Number(e.target.value))}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   >
                     {YEAR_OPTIONS.map((y) => (
                       <option key={y} value={y}>
@@ -247,7 +247,7 @@ export default function LeviesPage() {
                   </select>
                 </div>
                 <div className="sm:col-span-4">
-                  {formError && <p className="mb-3 text-sm text-red-600">{formError}</p>}
+                  {formError && <p className="mb-3 text-sm text-danger">{formError}</p>}
                   <button
                     type="submit"
                     disabled={submitting}
@@ -263,7 +263,7 @@ export default function LeviesPage() {
           {roster && (
             <div className="mt-8">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-body">
                   Levies in {year}
                 </h3>
                 {roster.levies.length > 0 && (
@@ -271,17 +271,17 @@ export default function LeviesPage() {
                 )}
               </div>
               {roster.levies.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">No levies raised in {year} yet.</p>
+                <p className="mt-3 text-sm text-body">No levies raised in {year} yet.</p>
               ) : filteredLevies.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-500">No levies match your search.</p>
+                <p className="mt-3 text-sm text-body">No levies match your search.</p>
               ) : (
                 <div className="mt-3 space-y-3">
                   {pageItems.map((levy) => (
-                    <div key={levy.id} className="rounded-lg border border-slate-200 bg-white p-4">
+                    <div key={levy.id} className="rounded-lg border border-divider bg-surface p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="font-medium text-slate-900">{levy.label}</p>
-                          <p className="mt-0.5 text-sm text-slate-500">
+                          <p className="font-medium text-title">{levy.label}</p>
+                          <p className="mt-0.5 text-sm text-body">
                             {formatMoney(levy.amount)} per resident · due {levy.dueDate}
                           </p>
                         </div>
@@ -294,7 +294,7 @@ export default function LeviesPage() {
                             <button
                               onClick={() => handleDelete(levy.id)}
                               disabled={deletingId === levy.id}
-                              className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                              className="text-xs font-medium text-danger hover:text-danger disabled:opacity-50"
                             >
                               Delete
                             </button>
@@ -303,17 +303,17 @@ export default function LeviesPage() {
                       </div>
                       <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
                         <div>
-                          <span className="text-slate-500">Expected</span>{' '}
-                          <span className="font-medium text-slate-900">
+                          <span className="text-body">Expected</span>{' '}
+                          <span className="font-medium text-title">
                             {formatMoney(levy.totalResidents * levy.amount)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-slate-500">Collected</span>{' '}
+                          <span className="text-body">Collected</span>{' '}
                           <span className="font-medium text-green-700">{formatMoney(levy.collected)}</span>
                         </div>
                         <div>
-                          <span className="text-slate-500">Outstanding</span>{' '}
+                          <span className="text-body">Outstanding</span>{' '}
                           <span className="font-medium text-red-700">{formatMoney(levy.outstanding)}</span>
                         </div>
                       </div>
@@ -377,15 +377,17 @@ function ResidentBreakdown({
 }) {
   const unpaid = residents.filter((r) => !r.paid);
   const paid = residents.filter((r) => r.paid);
+  const ordered = [...unpaid, ...paid];
+  const { page, setPage, totalPages, pageItems } = usePaginatedList(ordered, 8);
   return (
-    <div className="mt-3 rounded-md bg-slate-50 p-3">
-      <div className="max-h-64 overflow-y-auto">
+    <div className="mt-3 rounded-md bg-warm-50 p-3">
+      <div>
         <ul className="space-y-1.5 text-xs">
-          {[...unpaid, ...paid].map((r) => (
+          {pageItems.map((r) => (
             <li key={r.id} className="flex items-center justify-between gap-3">
-              <span className="text-slate-700">
+              <span className="text-text">
                 {r.fullName}
-                {r.house && <span className="text-slate-400"> · {r.house}</span>}
+                {r.house && <span className="text-body/70"> · {r.house}</span>}
               </span>
               {r.paid ? (
                 <div className="flex shrink-0 items-center gap-2">
@@ -410,6 +412,7 @@ function ResidentBreakdown({
           ))}
         </ul>
       </div>
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} totalLabel={`${residents.length} resident${residents.length === 1 ? '' : 's'}`} />
     </div>
   );
 }

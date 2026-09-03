@@ -12,14 +12,14 @@ export default function Pagination({ page, totalPages, onPageChange, totalLabel 
   if (totalPages <= 1 && !totalLabel) return null;
 
   return (
-    <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
+    <div className="mt-4 flex items-center justify-between text-sm text-body">
       <p>{totalLabel}</p>
       {totalPages > 1 && (
         <div className="flex items-center gap-2">
           <button
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1}
-            className="rounded-md border border-slate-300 px-2.5 py-1 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md border border-divider px-2.5 py-1 font-medium text-body hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-40"
           >
             Prev
           </button>
@@ -29,7 +29,7 @@ export default function Pagination({ page, totalPages, onPageChange, totalLabel 
           <button
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages}
-            className="rounded-md border border-slate-300 px-2.5 py-1 font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md border border-divider px-2.5 py-1 font-medium text-body hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-40"
           >
             Next
           </button>

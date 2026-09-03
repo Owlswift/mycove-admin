@@ -51,7 +51,7 @@ export default function ProjectsPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -60,8 +60,8 @@ export default function ProjectsPage() {
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Projects</h2>
-              <p className="mt-1 text-sm text-slate-500">Community projects, progress, and updates.</p>
+              <h2 className="text-xl font-semibold text-title">Projects</h2>
+              <p className="mt-1 text-sm text-body">Community projects, progress, and updates.</p>
             </div>
             <div className="flex items-center gap-2">
               {projects && projects.length > 0 && (
@@ -70,7 +70,7 @@ export default function ProjectsPage() {
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as StatusFilter)}
-                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                    className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
                   >
                     <option value="ALL">All</option>
                     <option value="IN_PROGRESS">In progress</option>
@@ -89,13 +89,13 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-          {projects === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+          {projects === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
           {projects && projects.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No projects created yet.</p>
+            <p className="mt-6 text-sm text-body">No projects created yet.</p>
           )}
           {projects && projects.length > 0 && filtered.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No projects match your search/filter.</p>
+            <p className="mt-6 text-sm text-body">No projects match your search/filter.</p>
           )}
           {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
@@ -148,6 +148,8 @@ function ProjectCard({
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const reportsPage = usePaginatedList(project.reports, 5);
 
   async function handleUpdateProgress() {
     setProgressError('');
@@ -235,9 +237,9 @@ function ProjectCard({
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+    <div className="rounded-lg border border-divider bg-surface p-4">
       <div className="flex items-center justify-between">
-        <p className="font-medium text-slate-900">{project.title}</p>
+        <p className="font-medium text-title">{project.title}</p>
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
             project.status === 'COMPLETED' ? 'bg-accent2-soft text-accent2-hover' : 'bg-accent-soft text-accent-hover'
@@ -248,10 +250,10 @@ function ProjectCard({
       </div>
 
       <div className="mt-3 flex items-center gap-3">
-        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-divider">
           <div className="h-full rounded-full bg-accent2" style={{ width: `${project.progress}%` }} />
         </div>
-        <span className="w-10 shrink-0 text-right text-sm text-slate-500">{project.progress}%</span>
+        <span className="w-10 shrink-0 text-right text-sm text-body">{project.progress}%</span>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -261,12 +263,12 @@ function ProjectCard({
           max={100}
           value={progress}
           onChange={(e) => setProgress(Number(e.target.value))}
-          className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm focus:border-slate-500 focus:outline-none"
+          className="w-20 rounded-md border border-divider px-2 py-1 text-sm focus:border-accent focus:outline-none"
         />
         <button
           onClick={handleUpdateProgress}
           disabled={progressLoading || progress === project.progress}
-          className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+          className="rounded-md border border-divider px-3 py-1 text-xs font-medium text-body hover:bg-accent-soft disabled:opacity-50"
         >
           {progressLoading ? 'Updating…' : 'Update progress'}
         </button>
@@ -277,17 +279,17 @@ function ProjectCard({
           {showReportForm ? 'Cancel' : '+ Add report'}
         </button>
       </div>
-      {progressError && <p className="mt-2 text-xs text-red-600">{progressError}</p>}
+      {progressError && <p className="mt-2 text-xs text-danger">{progressError}</p>}
 
       {showReportForm && (
-        <form onSubmit={handleAddReport} className="mt-3 space-y-2 rounded-md bg-slate-50 p-3">
+        <form onSubmit={handleAddReport} className="mt-3 space-y-2 rounded-md bg-warm-50 p-3">
           <input
             type="text"
             required
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             placeholder="Author, e.g. Finance Secretary"
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-divider px-2 py-1.5 text-sm focus:border-accent focus:outline-none"
           />
           <textarea
             required
@@ -295,16 +297,16 @@ function ProjectCard({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Update text…"
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-divider px-2 py-1.5 text-sm focus:border-accent focus:outline-none"
           />
           <input
             type="file"
             accept="image/*,video/*"
             onChange={handleReportMediaChange}
-            className="w-full text-xs text-slate-600"
+            className="w-full text-xs text-body"
           />
           {reportMedia && <MediaPreview dataUrl={reportMedia} className="h-24 w-full rounded-md object-cover" />}
-          {reportError && <p className="text-xs text-red-600">{reportError}</p>}
+          {reportError && <p className="text-xs text-danger">{reportError}</p>}
           <button
             type="submit"
             disabled={reportLoading}
@@ -316,7 +318,7 @@ function ProjectCard({
       )}
 
       {canManage && (
-      <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-3">
+      <div className="mt-3 flex items-center gap-3 border-t border-divider pt-3">
         <button
           onClick={() => setShowEditForm((v) => !v)}
           className="text-xs font-medium text-accent hover:text-accent-hover"
@@ -326,7 +328,7 @@ function ProjectCard({
         <button
           onClick={handleDelete}
           disabled={deleteLoading}
-          className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+          className="text-xs font-medium text-danger hover:text-danger disabled:opacity-50"
         >
           {deleteLoading ? 'Deleting…' : 'Delete project'}
         </button>
@@ -334,14 +336,14 @@ function ProjectCard({
       )}
 
       {canManage && showEditForm && (
-        <form onSubmit={handleEdit} className="mt-3 space-y-2 rounded-md bg-slate-50 p-3">
+        <form onSubmit={handleEdit} className="mt-3 space-y-2 rounded-md bg-warm-50 p-3">
           <input
             type="text"
             required
             value={editTitle}
             onChange={(e) => setEditTitle(e.target.value)}
             placeholder="Project title"
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-divider px-2 py-1.5 text-sm focus:border-accent focus:outline-none"
           />
           <textarea
             required
@@ -349,7 +351,7 @@ function ProjectCard({
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
             placeholder="Project description"
-            className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-full rounded-md border border-divider px-2 py-1.5 text-sm focus:border-accent focus:outline-none"
           />
           <input
             type="number"
@@ -358,16 +360,16 @@ function ProjectCard({
             value={editGoal}
             onChange={(e) => setEditGoal(e.target.value)}
             placeholder="Donation goal (₦)"
-            className="w-48 rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+            className="w-48 rounded-md border border-divider px-2 py-1.5 text-sm focus:border-accent focus:outline-none"
           />
           <input
             type="file"
             accept="image/*,video/*"
             onChange={handleEditMediaChange}
-            className="w-full text-xs text-slate-600"
+            className="w-full text-xs text-body"
           />
           {editMedia && <MediaPreview dataUrl={editMedia} className="h-24 w-full rounded-md object-cover" />}
-          {editError && <p className="text-xs text-red-600">{editError}</p>}
+          {editError && <p className="text-xs text-danger">{editError}</p>}
           <button
             type="submit"
             disabled={editLoading}
@@ -379,20 +381,26 @@ function ProjectCard({
       )}
 
       {project.reports.length > 0 && (
-        <div className="mt-4 space-y-2 border-t border-slate-100 pt-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Updates</p>
-          {project.reports.map((r, i) => (
-            <div key={i} className="rounded-md bg-slate-50 p-3">
+        <div className="mt-4 space-y-2 border-t border-divider pt-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-body/70">Updates</p>
+          {reportsPage.pageItems.map((r, i) => (
+            <div key={i} className="rounded-md bg-warm-50 p-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-slate-700">{r.author}</p>
-                <p className="text-xs text-slate-400">{r.date}</p>
+                <p className="text-xs font-semibold text-text">{r.author}</p>
+                <p className="text-xs text-body/70">{r.date}</p>
               </div>
-              <p className="mt-1 text-sm text-slate-600">{r.text}</p>
+              <p className="mt-1 text-sm text-body">{r.text}</p>
               {r.mediaBase64 && (
                 <MediaPreview dataUrl={r.mediaBase64} className="mt-2 h-32 w-full rounded-md object-cover" />
               )}
             </div>
           ))}
+          <Pagination
+            page={reportsPage.page}
+            totalPages={reportsPage.totalPages}
+            onPageChange={reportsPage.setPage}
+            totalLabel={`${project.reports.length} update${project.reports.length === 1 ? '' : 's'}`}
+          />
         </div>
       )}
     </div>

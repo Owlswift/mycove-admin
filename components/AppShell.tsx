@@ -1,31 +1,79 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import {
+  LayoutDashboard,
+  Users as UsersIcon,
+  UserPlus,
+  ClipboardList,
+  Megaphone,
+  CalendarDays,
+  BookOpen,
+  MessageSquareWarning,
+  Vote,
+  Building2,
+  Sparkles,
+  Wallet,
+  Receipt,
+  CreditCard,
+  FileText,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { clearTokens } from '@/lib/auth';
 import { identifyAdmin, resetAdminIdentity, trackPageView } from '@/lib/analytics';
 import { AdminUser, Role } from '@/lib/types';
 
-const NAV_ITEMS: { href: string; label: string; roles: Role[] }[] = [
-  { href: '/users', label: 'Users', roles: ['ADMIN'] },
-  { href: '/household-invites', label: 'Household Invites', roles: ['ADMIN'] },
-  { href: '/access-log', label: 'Access Log', roles: ['ADMIN'] },
-  { href: '/announcements', label: 'Announcements', roles: ['ADMIN'] },
-  { href: '/meetings', label: 'Meetings', roles: ['ADMIN'] },
-  { href: '/rules', label: 'Rules', roles: ['ADMIN'] },
-  { href: '/complaints', label: 'Complaints', roles: ['ADMIN'] },
-  { href: '/polls', label: 'Polls', roles: ['ADMIN'] },
-  { href: '/projects', label: 'Projects', roles: ['ADMIN', 'PROJECT_ADMIN'] },
-  { href: '/spotlights', label: 'Spotlights', roles: ['ADMIN'] },
-  { href: '/finance', label: 'Finance', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
-  { href: '/dues', label: 'Dues', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
-  { href: '/levies', label: 'Levies', roles: ['ADMIN', 'FINANCE_SECRETARY'] },
-  { href: '/invoices', label: 'Invoices', roles: ['PROJECT_ADMIN'] },
-  { href: '/estate-settings', label: 'Estate Settings', roles: ['ADMIN'] },
+type NavItem = { href: string; label: string; icon: LucideIcon; roles: Role[] };
+type NavGroup = { label: string; items: NavItem[] };
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Overview',
+    items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'] }],
+  },
+  {
+    label: 'Residents & Access',
+    items: [
+      { href: '/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN'] },
+      { href: '/household-invites', label: 'Household Invites', icon: UserPlus, roles: ['ADMIN'] },
+      { href: '/access-log', label: 'Access Log', icon: ClipboardList, roles: ['ADMIN'] },
+    ],
+  },
+  {
+    label: 'Community',
+    items: [
+      { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['ADMIN'] },
+      { href: '/meetings', label: 'Meetings', icon: CalendarDays, roles: ['ADMIN'] },
+      { href: '/rules', label: 'Rules', icon: BookOpen, roles: ['ADMIN'] },
+      { href: '/complaints', label: 'Complaints', icon: MessageSquareWarning, roles: ['ADMIN'] },
+      { href: '/polls', label: 'Polls', icon: Vote, roles: ['ADMIN'] },
+      { href: '/projects', label: 'Projects', icon: Building2, roles: ['ADMIN', 'PROJECT_ADMIN'] },
+      { href: '/spotlights', label: 'Spotlights', icon: Sparkles, roles: ['ADMIN'] },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { href: '/finance', label: 'Finance', icon: Wallet, roles: ['ADMIN', 'FINANCE_SECRETARY'] },
+      { href: '/dues', label: 'Dues', icon: Receipt, roles: ['ADMIN', 'FINANCE_SECRETARY'] },
+      { href: '/levies', label: 'Levies', icon: CreditCard, roles: ['ADMIN', 'FINANCE_SECRETARY'] },
+      { href: '/invoices', label: 'Invoices', icon: FileText, roles: ['PROJECT_ADMIN'] },
+    ],
+  },
+  {
+    label: 'Settings',
+    items: [{ href: '/estate-settings', label: 'Estate Settings', icon: Settings, roles: ['ADMIN'] }],
+  },
 ];
 
-const ROLE_LABELS: Record<Role, string> = {
+export const ROLE_LABELS: Record<Role, string> = {
   RESIDENT: 'Resident',
   GUARD: 'Security Guard',
   ADMIN: 'Admin',
@@ -37,7 +85,7 @@ const ROLE_LABELS: Record<Role, string> = {
 export function defaultRouteForRole(role: Role): string {
   if (role === 'FINANCE_SECRETARY') return '/finance';
   if (role === 'PROJECT_ADMIN') return '/invoices';
-  return '/users';
+  return '/dashboard';
 }
 
 export default function AppShell({
@@ -51,6 +99,7 @@ export default function AppShell({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (allow && !allow.includes(user.role)) {
@@ -67,51 +116,117 @@ export default function AppShell({
     trackPageView(pathname);
   }, [pathname]);
 
+  // A route change is the natural "close the mobile drawer" moment.
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
+
   function handleLogout() {
     resetAdminIdentity();
     clearTokens();
     router.push('/login');
   }
 
-  const items = NAV_ITEMS.filter((item) => item.roles.includes(user.role));
+  const groups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => item.roles.includes(user.role)),
+  })).filter((group) => group.items.length > 0);
   const blocked = allow && !allow.includes(user.role);
 
-  return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <header className="border-b border-accent-soft bg-white px-6 py-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-accent" aria-hidden />
-            <div>
-              <h1 className="text-lg font-semibold text-slate-900">MyCove Admin</h1>
-              <p className="text-xs text-slate-500">{ROLE_LABELS[user.role]} · {user.fullName}</p>
+  const sidebarContent = (
+    <>
+      <div className="flex items-center gap-2.5 px-5 py-5">
+        <Image src="/mycove-logo.png" alt="" width={28} height={28} className="shrink-0" />
+        <div>
+          <h1 className="text-base font-semibold text-title">MyCove Admin</h1>
+          <p className="text-xs text-body">{ROLE_LABELS[user.role]}</p>
+        </div>
+      </div>
+      <nav className="flex-1 overflow-y-auto px-3 pb-4">
+        {groups.map((group) => (
+          <div key={group.label} className="mb-5">
+            <p className="px-3 pb-1.5 text-[11px] font-semibold tracking-wide text-body/70 uppercase">
+              {group.label}
+            </p>
+            <div className="flex flex-col gap-0.5">
+              {group.items.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                      active
+                        ? 'bg-accent text-white'
+                        : 'text-text hover:bg-accent-soft'
+                    }`}
+                  >
+                    <Icon size={17} strokeWidth={2} className="shrink-0" />
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-accent-soft"
-          >
-            Log out
-          </button>
+        ))}
+      </nav>
+      <div className="border-t border-divider px-3 py-3">
+        <div className="mb-2 px-2">
+          <p className="truncate text-sm font-medium text-text">{user.fullName}</p>
+          {user.estateName && <p className="truncate text-xs text-body">{user.estateName}</p>}
         </div>
-        <nav className="mx-auto mt-4 flex max-w-5xl gap-1">
-          {items.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                  active ? 'bg-accent text-white' : 'text-slate-600 hover:bg-accent-soft'
-                }`}
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-body hover:bg-accent-soft hover:text-text"
+        >
+          <LogOut size={17} strokeWidth={2} />
+          Log out
+        </button>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="flex h-screen overflow-hidden">
+      {/* Desktop sidebar */}
+      <aside className="hidden h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-divider bg-surface md:flex">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile top bar + slide-over drawer */}
+      <div className="flex flex-1 flex-col overflow-hidden md:hidden">
+        <header className="flex items-center justify-between border-b border-divider bg-surface px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Image src="/mycove-logo.png" alt="" width={24} height={24} />
+            <span className="text-sm font-semibold text-title">MyCove Admin</span>
+          </div>
+          <button
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open menu"
+            className="rounded-md p-1.5 text-text hover:bg-accent-soft"
+          >
+            <Menu size={22} />
+          </button>
+        </header>
+        {mobileNavOpen && (
+          <div className="fixed inset-0 z-50 flex">
+            <div className="absolute inset-0 bg-black/30" onClick={() => setMobileNavOpen(false)} />
+            <div className="relative flex w-72 flex-col bg-surface shadow-xl">
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                aria-label="Close menu"
+                className="absolute top-4 right-3 rounded-md p-1.5 text-body hover:bg-accent-soft"
               >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </header>
-      <main className="flex-1 bg-warm-50">{blocked ? null : children}</main>
+                <X size={20} />
+              </button>
+              {sidebarContent}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <main className="flex-1 overflow-y-auto bg-warm-50">{blocked ? null : children}</main>
     </div>
   );
 }

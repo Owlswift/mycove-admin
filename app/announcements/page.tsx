@@ -53,7 +53,7 @@ export default function AnnouncementsPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -62,8 +62,8 @@ export default function AnnouncementsPage() {
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Announcements</h2>
-              <p className="mt-1 text-sm text-slate-500">Published history — every announcement is sent as a push notification too.</p>
+              <h2 className="text-xl font-semibold text-title">Announcements</h2>
+              <p className="mt-1 text-sm text-body">Published history — every announcement is sent as a push notification too.</p>
             </div>
             <Link
               href="/announcements/new"
@@ -79,7 +79,7 @@ export default function AnnouncementsPage() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
               >
                 <option value="ALL">All categories</option>
                 {categories.map((c) => (
@@ -91,26 +91,26 @@ export default function AnnouncementsPage() {
             </div>
           )}
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-          {announcements === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+          {announcements === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
           {announcements && announcements.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No announcements published yet.</p>
+            <p className="mt-6 text-sm text-body">No announcements published yet.</p>
           )}
           {announcements && announcements.length > 0 && filtered.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No announcements match your search/filter.</p>
+            <p className="mt-6 text-sm text-body">No announcements match your search/filter.</p>
           )}
           {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
               {pageItems.map((a) => (
-                <div key={a.id} className="rounded-lg border border-slate-200 bg-white p-4">
+                <div key={a.id} className="rounded-lg border border-divider bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium text-slate-900">{a.title}</p>
+                    <p className="font-medium text-title">{a.title}</p>
                     <span className="shrink-0 rounded-full bg-accent2-soft px-2 py-0.5 text-xs font-medium text-accent2-hover">
                       {a.category}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">{a.body}</p>
-                  <p className="mt-3 text-xs text-slate-400">{formatDate(a.publishedAt)}</p>
+                  <p className="mt-2 text-sm text-body">{a.body}</p>
+                  <p className="mt-3 text-xs text-body/70">{formatDate(a.publishedAt)}</p>
                 </div>
               ))}
             </div>

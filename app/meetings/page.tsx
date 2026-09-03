@@ -220,7 +220,7 @@ export default function MeetingsPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -229,8 +229,8 @@ export default function MeetingsPage() {
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Meetings</h2>
-              <p className="mt-1 text-sm text-slate-500">Schedule and manage estate meetings.</p>
+              <h2 className="text-xl font-semibold text-title">Meetings</h2>
+              <p className="mt-1 text-sm text-body">Schedule and manage estate meetings.</p>
             </div>
             <div className="flex items-center gap-2">
               {meetings && meetings.length > 0 && !showEditor && (
@@ -247,60 +247,60 @@ export default function MeetingsPage() {
             </div>
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
           {/* Editor */}
           {showEditor && (
-            <form onSubmit={handleSave} className="mt-6 space-y-4 rounded-lg border border-slate-200 bg-white p-6">
+            <form onSubmit={handleSave} className="mt-6 space-y-4 rounded-lg border border-divider bg-surface p-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700">Title</label>
+                <label className="block text-sm font-medium text-text">Title</label>
                 <input
                   type="text"
                   required
                   value={form.title}
                   onChange={(e) => updateField('title', e.target.value)}
                   placeholder="e.g. Annual General Meeting"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Date</label>
+                  <label className="block text-sm font-medium text-text">Date</label>
                   <input
                     type="date"
                     required
                     value={form.date}
                     onChange={(e) => updateField('date', e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700">Time</label>
+                  <label className="block text-sm font-medium text-text">Time</label>
                   <input
                     type="time"
                     required
                     value={form.time}
                     onChange={(e) => updateField('time', e.target.value)}
-                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                    className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Location</label>
+                <label className="block text-sm font-medium text-text">Location</label>
                 <input
                   type="text"
                   required
                   value={form.location}
                   onChange={(e) => updateField('location', e.target.value)}
                   placeholder="e.g. Community Hall"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Agenda (one per line)</label>
+                <label className="block text-sm font-medium text-text">Agenda (one per line)</label>
                 <div className="mt-1 space-y-2">
                   {form.agenda.map((item, i) => (
                     <div key={i} className="flex items-start gap-2">
@@ -310,13 +310,13 @@ export default function MeetingsPage() {
                         value={item}
                         onChange={(e) => updateAgenda(i, e.target.value)}
                         placeholder={`Agenda item ${i + 1}`}
-                        className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                        className="flex-1 rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => removeAgendaItem(i)}
                         disabled={form.agenda.length <= 1}
-                        className="mt-1 rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-30"
+                        className="mt-1 rounded-md px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-30"
                       >
                         ✕
                       </button>
@@ -333,8 +333,8 @@ export default function MeetingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Meeting report</label>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <label className="block text-sm font-medium text-text">Meeting report</label>
+                <p className="mt-0.5 text-xs text-body">
                   Written after the meeting happens. Residents can read this — or have the voice assistant read it
                   to them — word for word, so write it the way you want it heard.
                 </p>
@@ -343,7 +343,7 @@ export default function MeetingsPage() {
                   value={form.report}
                   onChange={(e) => updateField('report', e.target.value)}
                   placeholder="What was discussed, what was decided, and what happens next…"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                 />
               </div>
 
@@ -358,7 +358,7 @@ export default function MeetingsPage() {
                 <button
                   type="button"
                   onClick={cancelEdit}
-                  className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                  className="rounded-md px-4 py-2 text-sm font-medium text-body hover:bg-accent-soft"
                 >
                   Cancel
                 </button>
@@ -367,31 +367,31 @@ export default function MeetingsPage() {
           )}
 
           {/* List */}
-          {meetings === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {meetings === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
           {meetings && meetings.length === 0 && !showEditor && (
-            <p className="mt-6 text-sm text-slate-500">No meetings scheduled yet.</p>
+            <p className="mt-6 text-sm text-body">No meetings scheduled yet.</p>
           )}
           {meetings && meetings.length > 0 && filtered.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No meetings match your search.</p>
+            <p className="mt-6 text-sm text-body">No meetings match your search.</p>
           )}
           {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
               {pageItems.map((meeting) => (
-                <div key={meeting.id} className="rounded-lg border border-slate-200 bg-white p-4">
+                <div key={meeting.id} className="rounded-lg border border-divider bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <p className="font-medium text-slate-900">{meeting.title}</p>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="font-medium text-title">{meeting.title}</p>
+                      <p className="mt-1 text-sm text-body">
                         {meeting.date} at {meeting.time} · {meeting.location}
                       </p>
                       {meeting.agenda.length > 0 && (
-                        <ul className="mt-2 list-disc list-inside text-sm text-slate-600">
+                        <ul className="mt-2 list-disc list-inside text-sm text-body">
                           {meeting.agenda.map((item, i) => (
                             <li key={i}>{item}</li>
                           ))}
                         </ul>
                       )}
-                      <p className="mt-2 text-xs font-medium text-slate-400">
+                      <p className="mt-2 text-xs font-medium text-body/70">
                         {meeting.report ? '✓ Report added' : 'No report added yet'}
                       </p>
                     </div>
@@ -406,7 +406,7 @@ export default function MeetingsPage() {
                       <button
                         onClick={() => handleDelete(meeting.id)}
                         disabled={busyId === meeting.id}
-                        className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                        className="text-xs font-medium text-danger hover:text-danger disabled:opacity-50"
                       >
                         Delete
                       </button>
@@ -414,8 +414,8 @@ export default function MeetingsPage() {
                   </div>
 
                   {meeting.report && meeting.aiStatus === 'FAILED' && (
-                    <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3">
-                      <p className="text-xs font-medium text-red-700">
+                    <div className="mt-3 rounded-md border border-danger/30 bg-danger/5 p-3">
+                      <p className="text-xs font-medium text-danger">
                         AI processing failed{meeting.aiError ? `: ${meeting.aiError}` : '.'}
                       </p>
                       <button
@@ -429,9 +429,9 @@ export default function MeetingsPage() {
                   )}
 
                   {meeting.report && meeting.aiStatus === 'PROCESSED' && editingExtractionId !== meeting.id && (
-                    <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <div className="mt-3 rounded-md border border-divider bg-warm-50 p-3">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-slate-700">
+                        <p className="text-xs font-semibold text-text">
                           Meeting Report — AI Processing Complete
                         </p>
                         <span
@@ -447,8 +447,8 @@ export default function MeetingsPage() {
 
                       {meeting.aiDecisions.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Decisions</p>
-                          <ul className="mt-1 list-disc list-inside text-sm text-slate-700">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-body">Decisions</p>
+                          <ul className="mt-1 list-disc list-inside text-sm text-text">
                             {meeting.aiDecisions.map((d, i) => (
                               <li key={i}>{d}</li>
                             ))}
@@ -458,8 +458,8 @@ export default function MeetingsPage() {
 
                       {meeting.aiActionItems.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Action Items</p>
-                          <ul className="mt-1 list-disc list-inside text-sm text-slate-700">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-body">Action Items</p>
+                          <ul className="mt-1 list-disc list-inside text-sm text-text">
                             {meeting.aiActionItems.map((a, i) => (
                               <li key={i}>{a}</li>
                             ))}
@@ -470,7 +470,7 @@ export default function MeetingsPage() {
                       {meeting.aiTopics.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {meeting.aiTopics.map((t, i) => (
-                            <span key={i} className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] text-slate-600">
+                            <span key={i} className="rounded-full bg-divider px-2 py-0.5 text-[11px] text-body">
                               {t}
                             </span>
                           ))}
@@ -495,7 +495,7 @@ export default function MeetingsPage() {
                           </button>
                         )}
                       </div>
-                      <p className="mt-2 text-[11px] text-slate-400">
+                      <p className="mt-2 text-[11px] text-body/70">
                         Residents and the voice assistant only see this once it&rsquo;s approved — until then
                         it&rsquo;s exactly as the AI produced it.
                       </p>
@@ -503,32 +503,32 @@ export default function MeetingsPage() {
                   )}
 
                   {meeting.report && editingExtractionId === meeting.id && (
-                    <div className="mt-3 space-y-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <div className="mt-3 space-y-3 rounded-md border border-divider bg-warm-50 p-3">
                       <div>
-                        <label className="block text-xs font-medium text-slate-700">Decisions (one per line)</label>
+                        <label className="block text-xs font-medium text-text">Decisions (one per line)</label>
                         <textarea
                           rows={3}
                           value={extractionForm.decisions}
                           onChange={(e) => setExtractionForm((f) => ({ ...f, decisions: e.target.value }))}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                          className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-700">Action items (one per line)</label>
+                        <label className="block text-xs font-medium text-text">Action items (one per line)</label>
                         <textarea
                           rows={3}
                           value={extractionForm.actionItems}
                           onChange={(e) => setExtractionForm((f) => ({ ...f, actionItems: e.target.value }))}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                          className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-700">Topics (one per line)</label>
+                        <label className="block text-xs font-medium text-text">Topics (one per line)</label>
                         <textarea
                           rows={2}
                           value={extractionForm.topics}
                           onChange={(e) => setExtractionForm((f) => ({ ...f, topics: e.target.value }))}
-                          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                          className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                         />
                       </div>
                       <div className="flex gap-3">
@@ -541,7 +541,7 @@ export default function MeetingsPage() {
                         </button>
                         <button
                           onClick={cancelEditExtraction}
-                          className="rounded-md px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                          className="rounded-md px-3 py-1.5 text-xs font-medium text-body hover:bg-accent-soft"
                         >
                           Cancel
                         </button>

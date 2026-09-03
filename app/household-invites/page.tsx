@@ -61,9 +61,10 @@ export default function HouseholdInvitesPage() {
   }, [members, memberSearch]);
 
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filteredMembers);
+  const invitesPage = usePaginatedList(invites ?? []);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -71,31 +72,31 @@ export default function HouseholdInvitesPage() {
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Household Invitations</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="text-xl font-semibold text-title">Household Invitations</h2>
+            <p className="mt-1 text-sm text-body">
               A resident invited someone to get their own account under their household — no separate dues
               or levies for the invitee once approved. Review before it goes live.
             </p>
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
-          <h3 className="mt-8 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          <h3 className="mt-8 text-sm font-semibold uppercase tracking-wide text-body">
             Pending Approval
           </h3>
-          {invites === null && !error && <p className="mt-3 text-sm text-slate-500">Loading…</p>}
+          {invites === null && !error && <p className="mt-3 text-sm text-body">Loading…</p>}
           {invites && invites.length === 0 && (
-            <p className="mt-3 text-sm text-slate-500">No pending household invitations.</p>
+            <p className="mt-3 text-sm text-body">No pending household invitations.</p>
           )}
           {invites && invites.length > 0 && (
             <div className="mt-3 space-y-3">
-              {invites.map((inv) => (
-                <div key={inv.id} className="rounded-lg border border-slate-200 bg-white p-4">
+              {invitesPage.pageItems.map((inv) => (
+                <div key={inv.id} className="rounded-lg border border-divider bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <p className="font-medium text-slate-900">{inv.invitedFullName}</p>
-                      <p className="mt-0.5 text-sm text-slate-600">{inv.invitedPhone}</p>
-                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                      <p className="font-medium text-title">{inv.invitedFullName}</p>
+                      <p className="mt-0.5 text-sm text-body">{inv.invitedPhone}</p>
+                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-body/70">
                         <span>
                           Invited by: {inv.invitedBy.fullName}
                           {inv.invitedBy.house ? ` (${inv.invitedBy.house})` : ''}
@@ -124,51 +125,59 @@ export default function HouseholdInvitesPage() {
               ))}
             </div>
           )}
+          {invites && invites.length > 0 && (
+            <Pagination
+              page={invitesPage.page}
+              totalPages={invitesPage.totalPages}
+              onPageChange={invitesPage.setPage}
+              totalLabel={`${invites.length} pending invite${invites.length === 1 ? '' : 's'}`}
+            />
+          )}
 
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-body">
               Household Members
             </h3>
             {members && members.length > 0 && (
               <SearchInput value={memberSearch} onChange={setMemberSearch} placeholder="Search name…" />
             )}
           </div>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-body">
             Every account created by accepting a household invitation, and who invited them.
           </p>
-          {members === null && !error && <p className="mt-3 text-sm text-slate-500">Loading…</p>}
+          {members === null && !error && <p className="mt-3 text-sm text-body">Loading…</p>}
           {members && members.length === 0 && (
-            <p className="mt-3 text-sm text-slate-500">No household members yet.</p>
+            <p className="mt-3 text-sm text-body">No household members yet.</p>
           )}
           {members && members.length > 0 && filteredMembers.length === 0 && (
-            <p className="mt-3 text-sm text-slate-500">No members match your search.</p>
+            <p className="mt-3 text-sm text-body">No members match your search.</p>
           )}
           {filteredMembers.length > 0 && (
-            <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <div className="mt-3 overflow-x-auto rounded-lg border border-divider bg-surface">
+              <table className="min-w-full divide-y divide-divider text-sm">
                 <thead>
-                  <tr className="text-left text-slate-500">
+                  <tr className="text-left text-body">
                     <th className="px-4 py-3 font-medium">Member</th>
                     <th className="px-4 py-3 font-medium">Phone</th>
                     <th className="px-4 py-3 font-medium">Invited by</th>
                     <th className="px-4 py-3 font-medium">Joined</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-divider">
                   {pageItems.map((m) => (
                     <tr key={m.id}>
-                      <td className="px-4 py-3 font-medium text-slate-900">{m.fullName}</td>
-                      <td className="px-4 py-3 text-slate-600">{m.phone}</td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 font-medium text-title">{m.fullName}</td>
+                      <td className="px-4 py-3 text-body">{m.phone}</td>
+                      <td className="px-4 py-3 text-body">
                         {m.invitedBy.fullName}
                         {m.invitedBy.house ? ` (${m.invitedBy.house})` : ''}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{formatDate(m.joinedAt)}</td>
+                      <td className="px-4 py-3 text-body">{formatDate(m.joinedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="border-t border-slate-200 px-4 py-3">
+              <div className="border-t border-divider px-4 py-3">
                 <Pagination
                   page={page}
                   totalPages={totalPages}

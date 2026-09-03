@@ -79,7 +79,7 @@ export default function ComplaintsPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -88,8 +88,8 @@ export default function ComplaintsPage() {
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Complaints</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <h2 className="text-xl font-semibold text-title">Complaints</h2>
+              <p className="mt-1 text-sm text-body">
                 Resident complaints — update the status as they're addressed.
               </p>
             </div>
@@ -99,7 +99,7 @@ export default function ComplaintsPage() {
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as ComplaintStatus | 'ALL')}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                  className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
                 >
                   <option value="ALL">All statuses</option>
                   <option value="SUBMITTED">Submitted</option>
@@ -110,30 +110,30 @@ export default function ComplaintsPage() {
             )}
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-          {complaints === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+          {complaints === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
           {complaints && complaints.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No complaints submitted yet.</p>
+            <p className="mt-6 text-sm text-body">No complaints submitted yet.</p>
           )}
           {complaints && complaints.length > 0 && filtered.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No complaints match your search/filter.</p>
+            <p className="mt-6 text-sm text-body">No complaints match your search/filter.</p>
           )}
           {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
               {pageItems.map((c) => (
-                <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-4">
+                <div key={c.id} className="rounded-lg border border-divider bg-surface p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="font-medium text-slate-900">{c.category}</p>
+                        <p className="font-medium text-title">{c.category}</p>
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[c.status]}`}
                         >
                           {STATUS_LABELS[c.status]}
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-slate-600">{c.description}</p>
-                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                      <p className="mt-1 text-sm text-body">{c.description}</p>
+                      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-body/70">
                         <span>Ref: {c.ref}</span>
                         <span>By: {c.user.fullName}</span>
                         <span>Phone: {c.user.phone}</span>

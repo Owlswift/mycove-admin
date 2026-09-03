@@ -46,7 +46,7 @@ export default function AccessLogPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -55,8 +55,8 @@ export default function AccessLogPage() {
         <div className="mx-auto max-w-4xl">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Access Log</h2>
-              <p className="mt-1 text-sm text-slate-500">Visitor entries and exits recorded by security guards.</p>
+              <h2 className="text-xl font-semibold text-title">Access Log</h2>
+              <p className="mt-1 text-sm text-body">Visitor entries and exits recorded by security guards.</p>
             </div>
             {entries && entries.length > 0 && (
               <div className="flex gap-2">
@@ -64,7 +64,7 @@ export default function AccessLogPage() {
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as StatusFilter)}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                  className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
                 >
                   <option value="ALL">All</option>
                   <option value="ON_SITE">Still on-site</option>
@@ -74,46 +74,46 @@ export default function AccessLogPage() {
             )}
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
-          {entries === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {entries === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
 
           {entries && entries.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No visitor entries recorded yet.</p>
+            <p className="mt-6 text-sm text-body">No visitor entries recorded yet.</p>
           )}
 
           {entries && entries.length > 0 && filtered.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No entries match your search/filter.</p>
+            <p className="mt-6 text-sm text-body">No entries match your search/filter.</p>
           )}
 
           {filtered.length > 0 && (
-            <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <div className="mt-6 overflow-x-auto rounded-lg border border-divider bg-surface">
+              <table className="min-w-full divide-y divide-divider text-sm">
                 <thead>
-                  <tr className="text-left text-slate-500">
+                  <tr className="text-left text-body">
                     <th className="px-4 py-3 font-medium">Visitor</th>
                     <th className="px-4 py-3 font-medium">Visiting</th>
                     <th className="px-4 py-3 font-medium">Entered</th>
                     <th className="px-4 py-3 font-medium">Exited</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-divider">
                   {pageItems.map((entry) => (
                     <tr key={entry.id}>
-                      <td className="px-4 py-3 font-medium text-slate-900">{entry.visitor}</td>
+                      <td className="px-4 py-3 font-medium text-title">{entry.visitor}</td>
                       <td className="px-4 py-3">
                         <a
                           href="/users"
-                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          className="font-medium text-accent hover:text-accent-hover hover:underline"
                         >
                           {entry.resident.fullName}
                         </a>
                         {entry.resident.house && (
-                          <span className="ml-2 text-xs text-slate-500">{entry.resident.house}</span>
+                          <span className="ml-2 text-xs text-body">{entry.resident.house}</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{formatDateTime(entry.entryAt)}</td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-4 py-3 text-body">{formatDateTime(entry.entryAt)}</td>
+                      <td className="px-4 py-3 text-body">
                         {entry.exitAt ? (
                           formatDateTime(entry.exitAt)
                         ) : (
@@ -126,7 +126,7 @@ export default function AccessLogPage() {
                   ))}
                 </tbody>
               </table>
-              <div className="border-t border-slate-200 px-4 py-3">
+              <div className="border-t border-divider px-4 py-3">
                 <Pagination
                   page={page}
                   totalPages={totalPages}

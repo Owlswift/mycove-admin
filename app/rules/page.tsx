@@ -137,7 +137,7 @@ export default function RulesPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -146,8 +146,8 @@ export default function RulesPage() {
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Rules & Regulations</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <h2 className="text-xl font-semibold text-title">Rules & Regulations</h2>
+              <p className="mt-1 text-sm text-body">
                 Manage the estate rules — formatting (bold, lists, headings) is preserved on the mobile app.
               </p>
             </div>
@@ -166,25 +166,25 @@ export default function RulesPage() {
             </div>
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
           {/* Editor */}
           {showEditor ? (
-            <form onSubmit={handleSave} className="mt-6 space-y-4 rounded-lg border border-slate-200 bg-white p-6">
+            <form onSubmit={handleSave} className="mt-6 space-y-4 rounded-lg border border-divider bg-surface p-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700">Section Title</label>
+                <label className="block text-sm font-medium text-text">Section Title</label>
                 <input
                   type="text"
                   required
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Security"
-                  className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                  className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-text">
                   Rules (one per line — supports **bold**, *italic*, `code`, and - lists)
                 </label>
                 <div className="mt-1 space-y-2">
@@ -196,13 +196,13 @@ export default function RulesPage() {
                         value={item}
                         onChange={(e) => updateItem(i, e.target.value)}
                         placeholder={`Rule ${i + 1} — e.g. **All visitors** must sign in at the gate.`}
-                        className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+                        className="flex-1 rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => removeItem(i)}
                         disabled={form.items.length <= 1}
-                        className="mt-1 rounded-md px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-30"
+                        className="mt-1 rounded-md px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-30"
                       >
                         ✕
                       </button>
@@ -229,7 +229,7 @@ export default function RulesPage() {
                 <button
                   type="button"
                   onClick={cancelEdit}
-                  className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                  className="rounded-md px-4 py-2 text-sm font-medium text-body hover:bg-accent-soft"
                 >
                   Cancel
                 </button>
@@ -238,44 +238,23 @@ export default function RulesPage() {
           ) : null}
 
           {/* List */}
-          {sections === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {sections === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
           {sections && sections.length === 0 && !editingId && (
-            <p className="mt-6 text-sm text-slate-500">No rules sections yet. Create one to get started.</p>
+            <p className="mt-6 text-sm text-body">No rules sections yet. Create one to get started.</p>
           )}
           {sections && sections.length > 0 && filtered.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No sections match your search.</p>
+            <p className="mt-6 text-sm text-body">No sections match your search.</p>
           )}
           {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
               {pageItems.map((section) => (
-                <div key={section.id} className="rounded-lg border border-slate-200 bg-white p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-medium text-slate-900">{section.title}</p>
-                    <div className="flex shrink-0 gap-3">
-                      <button
-                        onClick={() => startEdit(section)}
-                        disabled={busyId === section.id}
-                        className="text-xs font-medium text-accent2 hover:text-accent2-hover disabled:opacity-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(section.id)}
-                        disabled={busyId === section.id}
-                        className="text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                  <ul className="mt-2 space-y-1">
-                    {section.items.map((item) => (
-                      <li key={item.id} className="text-sm text-slate-600">
-                        {item.text}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <RuleSectionCard
+                  key={section.id}
+                  section={section}
+                  onEdit={() => startEdit(section)}
+                  onDelete={() => handleDelete(section.id)}
+                  busy={busyId === section.id}
+                />
               ))}
             </div>
           )}
@@ -290,5 +269,56 @@ export default function RulesPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function RuleSectionCard({
+  section,
+  onEdit,
+  onDelete,
+  busy,
+}: {
+  section: RulesSection;
+  onEdit: () => void;
+  onDelete: () => void;
+  busy: boolean;
+}) {
+  const itemsPage = usePaginatedList(section.items, 8);
+
+  return (
+    <div className="rounded-lg border border-divider bg-surface p-4">
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-medium text-title">{section.title}</p>
+        <div className="flex shrink-0 gap-3">
+          <button
+            onClick={onEdit}
+            disabled={busy}
+            className="text-xs font-medium text-accent2 hover:text-accent2-hover disabled:opacity-50"
+          >
+            Edit
+          </button>
+          <button
+            onClick={onDelete}
+            disabled={busy}
+            className="text-xs font-medium text-danger hover:text-danger disabled:opacity-50"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+      <ul className="mt-2 space-y-1">
+        {itemsPage.pageItems.map((item) => (
+          <li key={item.id} className="text-sm text-body">
+            {item.text}
+          </li>
+        ))}
+      </ul>
+      <Pagination
+        page={itemsPage.page}
+        totalPages={itemsPage.totalPages}
+        onPageChange={itemsPage.setPage}
+        totalLabel={`${section.items.length} rule${section.items.length === 1 ? '' : 's'}`}
+      />
+    </div>
   );
 }

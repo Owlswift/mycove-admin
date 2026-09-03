@@ -51,31 +51,31 @@ export default function RecordLevyPaymentModal({
 
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 px-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg">
-        <h2 className="text-lg font-semibold text-slate-900">Mark paid — {residentName}</h2>
-        <p className="mt-1 text-sm text-slate-500">
+      <form onSubmit={handleSubmit} className="w-full max-w-md rounded-xl bg-surface p-6 shadow-lg">
+        <h2 className="text-lg font-semibold text-title">Mark paid — {residentName}</h2>
+        <p className="mt-1 text-sm text-body">
           {levyLabel}, paid outside the app. Attach the receipt as evidence.
         </p>
 
         <div className="mt-5">
-          <label className="block text-sm font-medium text-slate-700">Receipt</label>
+          <label className="block text-sm font-medium text-text">Receipt</label>
           <input
             type="file"
             required
             accept="image/*"
             onChange={handleReceiptChange}
-            className="mt-1 w-full text-sm text-slate-600"
+            className="mt-1 w-full text-sm text-body"
           />
           {receipt && <MediaPreview dataUrl={receipt} className="mt-2 h-32 w-32 rounded-md object-cover" />}
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-4 text-sm text-danger">{error}</p>}
 
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+            className="rounded-md px-4 py-2 text-sm font-medium text-body hover:bg-accent-soft"
           >
             Cancel
           </button>

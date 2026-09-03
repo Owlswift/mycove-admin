@@ -14,7 +14,7 @@ export default function LandingPage() {
   }, [user, router]);
 
   return (
-    <main className="flex flex-1 items-center justify-center text-slate-500">
+    <main className="flex flex-1 items-center justify-center text-body">
       {loading ? 'Loading…' : null}
     </main>
   );

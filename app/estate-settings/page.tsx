@@ -65,7 +65,7 @@ export default function EstateSettingsPage() {
   }
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   return (
@@ -73,23 +73,23 @@ export default function EstateSettingsPage() {
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Estate Settings</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <h2 className="text-xl font-semibold text-title">Estate Settings</h2>
+            <p className="mt-1 text-sm text-body">
               Contact numbers every resident sees on their SOS / emergency screen.
             </p>
           </div>
 
           {loadError && (
-            <p className="mt-6 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</p>
+            <p className="mt-6 rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">{loadError}</p>
           )}
 
           {contacts !== null && (
-            <form onSubmit={handleSave} className="mt-6 space-y-5 rounded-lg border border-slate-200 bg-white p-5">
+            <form onSubmit={handleSave} className="mt-6 space-y-5 rounded-lg border border-divider bg-surface p-5">
               <div>
-                <label htmlFor="security-guard-phone" className="block text-sm font-medium text-slate-700">
+                <label htmlFor="security-guard-phone" className="block text-sm font-medium text-text">
                   Security guard phone
                 </label>
-                <p className="mb-2 mt-0.5 text-xs text-slate-500">
+                <p className="mb-2 mt-0.5 text-xs text-body">
                   The estate security desk duty number residents can reach in an emergency.
                 </p>
                 <input
@@ -98,15 +98,15 @@ export default function EstateSettingsPage() {
                   value={securityGuardPhone}
                   onChange={(e) => setSecurityGuardPhone(e.target.value)}
                   placeholder="e.g. 0800 123 4567"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full rounded-md border border-divider px-3 py-2 text-sm text-title focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                 />
               </div>
 
               <div>
-                <label htmlFor="estate-admin-phone" className="block text-sm font-medium text-slate-700">
+                <label htmlFor="estate-admin-phone" className="block text-sm font-medium text-text">
                   Estate admin phone
                 </label>
-                <p className="mb-2 mt-0.5 text-xs text-slate-500">
+                <p className="mb-2 mt-0.5 text-xs text-body">
                   The management office number for non-emergency enquiries.
                 </p>
                 <input
@@ -115,11 +115,11 @@ export default function EstateSettingsPage() {
                   value={estateAdminPhone}
                   onChange={(e) => setEstateAdminPhone(e.target.value)}
                   placeholder="e.g. 0800 765 4321"
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full rounded-md border border-divider px-3 py-2 text-sm text-title focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                 />
               </div>
 
-              {saveError && <p className="text-sm text-red-600">{saveError}</p>}
+              {saveError && <p className="text-sm text-danger">{saveError}</p>}
               {savedMsg && <p className="text-sm text-green-700">{savedMsg}</p>}
 
               <button
@@ -133,7 +133,7 @@ export default function EstateSettingsPage() {
           )}
 
           {contacts === null && !loadError && (
-            <p className="mt-6 text-sm text-slate-500">Loading…</p>
+            <p className="mt-6 text-sm text-body">Loading…</p>
           )}
         </div>
       </div>

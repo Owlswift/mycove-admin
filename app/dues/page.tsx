@@ -22,9 +22,9 @@ function formatMoney(amount: number): string {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    <div className="rounded-lg border border-divider bg-surface p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-body">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-title">{value}</p>
     </div>
   );
 }
@@ -105,7 +105,7 @@ export default function DuesPage() {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
   if (userLoading || !user) {
-    return <main className="flex flex-1 items-center justify-center text-slate-500">Loading…</main>;
+    return <main className="flex flex-1 items-center justify-center text-body">Loading…</main>;
   }
 
   function handleExport() {
@@ -137,8 +137,8 @@ export default function DuesPage() {
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-slate-900">Dues</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <h2 className="text-xl font-semibold text-title">Dues</h2>
+              <p className="mt-1 text-sm text-body">
                 Who&apos;s paid and who hasn&apos;t. Dues are annual, payable in one lump sum or monthly —
                 the balance below reflects what&apos;s accrued so far this fiscal year minus what&apos;s
                 actually been paid.
@@ -146,11 +146,11 @@ export default function DuesPage() {
             </div>
             <div className="flex shrink-0 items-end gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-500">Fiscal year</label>
+                <label className="block text-xs font-medium text-body">Fiscal year</label>
                 <select
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value))}
-                  className="mt-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                  className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
                 >
                   {YEAR_OPTIONS.map((y) => (
                     <option key={y} value={y}>
@@ -162,33 +162,33 @@ export default function DuesPage() {
               <button
                 onClick={handleExport}
                 disabled={!residents || residents.length === 0}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="rounded-md border border-divider px-3 py-1.5 text-sm font-medium text-text hover:bg-accent-soft disabled:opacity-50"
               >
                 Export CSV
               </button>
             </div>
           </div>
 
-          {error && <p className="mt-6 text-sm text-red-600">{error}</p>}
-          {roster === null && !error && <p className="mt-6 text-sm text-slate-500">Loading…</p>}
+          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+          {roster === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
 
           {roster && (
-            <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Dues rate</p>
+            <div className="mt-6 rounded-lg border border-divider bg-surface p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-body">Dues rate</p>
               {isFinanceSecretary ? (
                 <form onSubmit={handleSaveRate} className="mt-2 flex flex-wrap items-end gap-3">
                   <div>
-                    <label className="block text-xs text-slate-500">Monthly amount</label>
+                    <label className="block text-xs text-body">Monthly amount</label>
                     <input
                       type="number"
                       required
                       min={1}
                       value={rateInput}
                       onChange={(e) => setRateInput(e.target.value)}
-                      className="mt-1 w-40 rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                      className="mt-1 w-40 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
                     />
                   </div>
-                  <p className="pb-1.5 text-xs text-slate-500">
+                  <p className="pb-1.5 text-xs text-body">
                     {rateInput && !isNaN(Number(rateInput)) && `= ${formatMoney(Number(rateInput) * 12)}/year`}
                   </p>
                   <button
@@ -198,11 +198,11 @@ export default function DuesPage() {
                   >
                     {rateSaving ? 'Saving…' : 'Save'}
                   </button>
-                  {rateError && <p className="w-full text-sm text-red-600">{rateError}</p>}
+                  {rateError && <p className="w-full text-sm text-danger">{rateError}</p>}
                   {rateSuccess && <p className="w-full text-sm text-green-700">Dues rate updated.</p>}
                 </form>
               ) : (
-                <p className="mt-1 text-lg font-semibold text-slate-900">
+                <p className="mt-1 text-lg font-semibold text-title">
                   {formatMoney(roster.monthlyAmount)}/month ({formatMoney(roster.monthlyAmount * 12)}/year)
                 </p>
               )}
@@ -218,7 +218,7 @@ export default function DuesPage() {
           )}
 
           {residents && residents.length === 0 && (
-            <p className="mt-6 text-sm text-slate-500">No residents yet.</p>
+            <p className="mt-6 text-sm text-body">No residents yet.</p>
           )}
 
           {residents && residents.length > 0 && (
@@ -227,7 +227,7 @@ export default function DuesPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as DuesStatusFilter)}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm focus:border-slate-500 focus:outline-none"
+                className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
               >
                 <option value="ALL">All</option>
                 <option value="OWING">Owing</option>
@@ -237,14 +237,14 @@ export default function DuesPage() {
           )}
 
           {residents && residents.length > 0 && filtered.length === 0 && (
-            <p className="mt-4 text-sm text-slate-500">No residents match your search/filter.</p>
+            <p className="mt-4 text-sm text-body">No residents match your search/filter.</p>
           )}
 
           {filtered.length > 0 && (
-            <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <div className="mt-4 overflow-x-auto rounded-lg border border-divider bg-surface">
+              <table className="min-w-full divide-y divide-divider text-sm">
                 <thead>
-                  <tr className="text-left text-slate-500">
+                  <tr className="text-left text-body">
                     <th className="px-4 py-3 font-medium">Resident</th>
                     <th className="px-4 py-3 font-medium">House</th>
                     <th className="px-4 py-3 font-medium">Phone</th>
@@ -253,12 +253,12 @@ export default function DuesPage() {
                     {canRecordPayment && <th className="px-4 py-3 font-medium"></th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-divider">
                   {pageItems.map((r) => (
                     <tr key={r.id}>
-                      <td className="px-4 py-3 font-medium text-slate-900">{r.fullName}</td>
-                      <td className="px-4 py-3 text-slate-600">{r.house ?? '—'}</td>
-                      <td className="px-4 py-3 text-slate-600">{r.phone}</td>
+                      <td className="px-4 py-3 font-medium text-title">{r.fullName}</td>
+                      <td className="px-4 py-3 text-body">{r.house ?? '—'}</td>
+                      <td className="px-4 py-3 text-body">{r.phone}</td>
                       <td className="px-4 py-3">
                         {r.duesBalance > 0 ? (
                           <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
@@ -270,7 +270,7 @@ export default function DuesPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">{r.monthsPaid} of 12</td>
+                      <td className="px-4 py-3 text-body">{r.monthsPaid} of 12</td>
                       {canRecordPayment && (
                         <td className="px-4 py-3 text-right">
                           <button
@@ -285,7 +285,7 @@ export default function DuesPage() {
                   ))}
                 </tbody>
               </table>
-              <div className="border-t border-slate-200 px-4 py-3">
+              <div className="border-t border-divider px-4 py-3">
                 <Pagination
                   page={page}
                   totalPages={totalPages}
