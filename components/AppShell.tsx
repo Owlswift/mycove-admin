@@ -194,9 +194,13 @@ export default function AppShell({
         {sidebarContent}
       </aside>
 
-      {/* Mobile top bar + slide-over drawer */}
-      <div className="flex flex-1 flex-col overflow-hidden md:hidden">
-        <header className="flex items-center justify-between border-b border-divider bg-surface px-4 py-3">
+      {/* Content column — mobile top bar (mobile only) + main, stacked
+          vertically. This must be a single flex-col sibling of <aside>,
+          not two separate flex-1 siblings of the outer row: main used to
+          sit next to the mobile header wrapper instead of below it,
+          splitting the screen in half on small viewports. */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex items-center justify-between border-b border-divider bg-surface px-4 py-3 md:hidden">
           <div className="flex items-center gap-2">
             <Image src="/mycove-logo.png" alt="" width={24} height={24} />
             <span className="text-sm font-semibold text-title">MyCove Admin</span>
@@ -210,7 +214,7 @@ export default function AppShell({
           </button>
         </header>
         {mobileNavOpen && (
-          <div className="fixed inset-0 z-50 flex">
+          <div className="fixed inset-0 z-50 flex md:hidden">
             <div className="absolute inset-0 bg-black/30" onClick={() => setMobileNavOpen(false)} />
             <div className="relative flex w-72 flex-col bg-surface shadow-xl">
               <button
@@ -224,9 +228,8 @@ export default function AppShell({
             </div>
           </div>
         )}
+        <main className="flex-1 overflow-y-auto bg-warm-50">{blocked ? null : children}</main>
       </div>
-
-      <main className="flex-1 overflow-y-auto bg-warm-50">{blocked ? null : children}</main>
     </div>
   );
 }
