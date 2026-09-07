@@ -55,7 +55,7 @@ export default function DuesPage() {
     try {
       const result = await apiFetch<DuesRoster>(`/finance/dues?year=${forYear}`);
       setRoster(result);
-      setRateInput(String(result.monthlyAmount));
+      setRateInput(result.monthlyAmount !== null ? String(result.monthlyAmount) : '');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load dues status.');
     }
@@ -183,6 +183,7 @@ export default function DuesPage() {
                       type="number"
                       required
                       min={1}
+                      placeholder="Not set yet"
                       value={rateInput}
                       onChange={(e) => setRateInput(e.target.value)}
                       className="mt-1 w-40 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
@@ -200,7 +201,14 @@ export default function DuesPage() {
                   </button>
                   {rateError && <p className="w-full text-sm text-danger">{rateError}</p>}
                   {rateSuccess && <p className="w-full text-sm text-green-700">Dues rate updated.</p>}
+                  {roster.monthlyAmount === null && !rateSuccess && (
+                    <p className="w-full text-xs text-body">
+                      No rate set yet — residents won&apos;t accrue any dues until you save one.
+                    </p>
+                  )}
                 </form>
+              ) : roster.monthlyAmount === null ? (
+                <p className="mt-1 text-sm text-body">Not set yet.</p>
               ) : (
                 <p className="mt-1 text-lg font-semibold text-title">
                   {formatMoney(roster.monthlyAmount)}/month ({formatMoney(roster.monthlyAmount * 12)}/year)

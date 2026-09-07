@@ -143,7 +143,7 @@ export interface ResidentDues {
 }
 
 export interface DuesRoster {
-  monthlyAmount: number;
+  monthlyAmount: number | null;
   totals: FinanceTotals;
   residents: ResidentDues[];
 }
