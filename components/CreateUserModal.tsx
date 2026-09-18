@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 
 interface Props {
@@ -13,11 +13,31 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN'>('RESIDENT');
   const [house, setHouse] = useState('');
+  const [streets, setStreets] = useState<string[]>([]);
+  const [street, setStreet] = useState('');
+  const [houseNumber, setHouseNumber] = useState('');
   const [guardPassword, setGuardPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const isGuard = role === 'GUARD';
+  // When the estate has preloaded streets the address is a street pick plus
+  // a house number; otherwise it stays the original free-text field.
+  const usesStreets = streets.length > 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch<{ streets: string[] }>('/estates/admin/streets')
+      .then((r) => {
+        if (!cancelled) setStreets(r.streets);
+      })
+      .catch(() => {
+        // Non-fatal: fall back to the free-text house address.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +50,9 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
           phone,
           fullName,
           role,
-          house: house.trim() || undefined,
+          ...(usesStreets
+            ? { street: street || undefined, houseNumber: houseNumber.trim() || undefined }
+            : { house: house.trim() || undefined }),
           password: isGuard ? guardPassword : undefined,
         }),
       });
@@ -107,18 +129,52 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
               />
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium text-text">
-              House address {role !== 'RESIDENT' && <span className="text-body/70">(optional)</span>}
-            </label>
-            <input
-              type="text"
-              value={house}
-              onChange={(e) => setHouse(e.target.value)}
-              placeholder="e.g. Block C, Flat 4"
-              className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
-            />
-          </div>
+          {usesStreets ? (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-text">
+                  Street {role !== 'RESIDENT' && <span className="text-body/70">(optional)</span>}
+                </label>
+                <select
+                  required={role === 'RESIDENT'}
+                  value={street}
+                  onChange={(e) => setStreet(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                >
+                  <option value="">Select a street</option>
+                  {streets.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-text">House no.</label>
+                <input
+                  type="text"
+                  required={role === 'RESIDENT' || street !== ''}
+                  value={houseNumber}
+                  onChange={(e) => setHouseNumber(e.target.value)}
+                  placeholder="e.g. 12"
+                  className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
+                />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-text">
+                House address {role !== 'RESIDENT' && <span className="text-body/70">(optional)</span>}
+              </label>
+              <input
+                type="text"
+                value={house}
+                onChange={(e) => setHouse(e.target.value)}
+                placeholder="e.g. Block C, Flat 4"
+                className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
+              />
+            </div>
+          )}
         </div>
 
         {error && <p className="mt-4 text-sm text-danger">{error}</p>}
