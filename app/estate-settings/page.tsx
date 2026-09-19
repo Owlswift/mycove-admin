@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useCurrentUser } from '@/lib/use-current-user';
 import AppShell from '@/components/AppShell';
+import TokenChargingCard from '@/components/TokenChargingCard';
 
 interface EstateEmergencyContacts {
   securityGuardPhone: string | null;
@@ -311,6 +312,8 @@ export default function EstateSettingsPage() {
           {!restrictionLoaded && restrictionError && (
             <p className="mt-6 rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">{restrictionError}</p>
           )}
+
+          <TokenChargingCard />
 
           {contacts === null && !loadError && (
             <p className="mt-6 text-sm text-body">Loading…</p>
