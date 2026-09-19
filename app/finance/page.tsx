@@ -63,7 +63,7 @@ export default function FinancePage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY') void load();
+    if (user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY' || user?.role === 'CHAIRMAN') void load();
   }, [user, load]);
 
   async function handleAllocate(e: React.FormEvent) {
@@ -216,7 +216,7 @@ export default function FinancePage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN', 'FINANCE_SECRETARY']}>
+    <AppShell user={user} allow={['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-4xl">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -224,14 +224,17 @@ export default function FinancePage() {
               <h2 className="text-xl font-semibold text-title">Finance</h2>
               <p className="mt-1 text-sm text-body">Estate treasury, project allocations, and invoices.</p>
             </div>
-            <button
-              type="button"
-              onClick={handleSendReminders}
-              disabled={remindersLoading}
-              className="rounded-lg bg-accent2 px-4 py-2 text-sm font-medium text-white hover:bg-accent2-hover disabled:opacity-50"
-            >
-              {remindersLoading ? 'Sending…' : 'Send payment reminders'}
-            </button>
+            {/* Read-only for the chairman: he can review the treasury but not message residents. */}
+            {user.role !== 'CHAIRMAN' && (
+              <button
+                type="button"
+                onClick={handleSendReminders}
+                disabled={remindersLoading}
+                className="rounded-lg bg-accent2 px-4 py-2 text-sm font-medium text-white hover:bg-accent2-hover disabled:opacity-50"
+              >
+                {remindersLoading ? 'Sending…' : 'Send payment reminders'}
+              </button>
+            )}
           </div>
           {remindersMsg && <p className="mt-2 text-sm text-accent-hover">{remindersMsg}</p>}
 
@@ -298,12 +301,14 @@ export default function FinancePage() {
                           <td className="px-4 py-3 text-accent2-hover">{formatMoney(p.donated)}</td>
                           <td className="px-4 py-3 text-body">{formatMoney(p.pledged)}</td>
                           <td className="px-4 py-3 text-right">
-                            <button
-                              onClick={() => togglePledges(p.id)}
-                              className="text-xs font-medium text-accent2 hover:text-accent2-hover"
-                            >
-                              {expandedProjectId === p.id ? 'Hide pledges' : 'Pledges breakdown'}
-                            </button>
+                            {user.role !== 'CHAIRMAN' && (
+                              <button
+                                onClick={() => togglePledges(p.id)}
+                                className="text-xs font-medium text-accent2 hover:text-accent2-hover"
+                              >
+                                {expandedProjectId === p.id ? 'Hide pledges' : 'Pledges breakdown'}
+                              </button>
+                            )}
                           </td>
                         </tr>
                         {expandedProjectId === p.id && (

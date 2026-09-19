@@ -36,33 +36,33 @@ type NavGroup = { label: string; items: NavItem[] };
 const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Overview',
-    items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'] }],
+    items: [{ href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMIN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN', 'CHAIRMAN'] }],
   },
   {
     label: 'Residents & Access',
     items: [
       { href: '/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN'] },
       { href: '/household-invites', label: 'Household Invites', icon: UserPlus, roles: ['ADMIN'] },
-      { href: '/access-log', label: 'Access Log', icon: ClipboardList, roles: ['ADMIN'] },
+      { href: '/access-log', label: 'Access Log', icon: ClipboardList, roles: ['ADMIN', 'CHAIRMAN'] },
     ],
   },
   {
     label: 'Community',
     items: [
-      { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['ADMIN'] },
+      { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['ADMIN', 'CHAIRMAN'] },
       { href: '/meetings', label: 'Meetings', icon: CalendarDays, roles: ['ADMIN'] },
       { href: '/rules', label: 'Rules', icon: BookOpen, roles: ['ADMIN'] },
-      { href: '/complaints', label: 'Complaints', icon: MessageSquareWarning, roles: ['ADMIN'] },
+      { href: '/complaints', label: 'Complaints', icon: MessageSquareWarning, roles: ['ADMIN', 'CHAIRMAN'] },
       { href: '/polls', label: 'Polls', icon: Vote, roles: ['ADMIN'] },
-      { href: '/projects', label: 'Projects', icon: Building2, roles: ['ADMIN', 'PROJECT_ADMIN'] },
+      { href: '/projects', label: 'Projects', icon: Building2, roles: ['ADMIN', 'PROJECT_ADMIN', 'CHAIRMAN'] },
       { href: '/spotlights', label: 'Spotlights', icon: Sparkles, roles: ['ADMIN'] },
     ],
   },
   {
     label: 'Finance',
     items: [
-      { href: '/finance', label: 'Finance', icon: Wallet, roles: ['ADMIN', 'FINANCE_SECRETARY'] },
-      { href: '/dues', label: 'Dues', icon: Receipt, roles: ['ADMIN', 'FINANCE_SECRETARY'] },
+      { href: '/finance', label: 'Finance', icon: Wallet, roles: ['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN'] },
+      { href: '/dues', label: 'Dues', icon: Receipt, roles: ['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN'] },
       { href: '/levies', label: 'Levies', icon: CreditCard, roles: ['ADMIN', 'FINANCE_SECRETARY'] },
       { href: '/invoices', label: 'Invoices', icon: FileText, roles: ['PROJECT_ADMIN'] },
     ],

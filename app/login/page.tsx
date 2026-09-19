@@ -7,7 +7,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 import { saveTokens } from '@/lib/auth';
 import { identifyAdmin, trackAdmin } from '@/lib/analytics';
 
-type AdminRole = 'ADMIN' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN';
+type AdminRole = 'ADMIN' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN' | 'CHAIRMAN';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,6 +84,7 @@ export default function LoginPage() {
               <option value="ADMIN">Admin</option>
               <option value="FINANCE_SECRETARY">Finance Secretary</option>
               <option value="PROJECT_ADMIN">Project Admin</option>
+              <option value="CHAIRMAN">Chairman</option>
             </select>
           </div>
         </div>

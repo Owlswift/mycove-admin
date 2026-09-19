@@ -44,7 +44,7 @@ export default function ComplaintsPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN') void load();
+    if (user?.role === 'ADMIN' || user?.role === 'CHAIRMAN') void load();
   }, [user, load]);
 
   async function handleStatusUpdate(id: string, status: ComplaintStatus) {
@@ -83,7 +83,7 @@ export default function ComplaintsPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -142,6 +142,8 @@ export default function ComplaintsPage() {
                       </div>
                     </div>
                   </div>
+                  {/* The chairman can see every complaint but not change its status. */}
+                  {user.role === 'ADMIN' && (
                   <div className="mt-3 flex gap-2">
                     {c.status !== 'IN_REVIEW' && (
                       <button
@@ -171,6 +173,7 @@ export default function ComplaintsPage() {
                       </button>
                     )}
                   </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -35,7 +35,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN' || user?.role === 'PROJECT_ADMIN') void load();
+    if (user?.role === 'ADMIN' || user?.role === 'PROJECT_ADMIN' || user?.role === 'CHAIRMAN') void load();
   }, [user, load]);
 
   const filtered = useMemo(() => {
@@ -55,7 +55,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN', 'PROJECT_ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'PROJECT_ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -100,7 +100,7 @@ export default function ProjectsPage() {
           {filtered.length > 0 && (
             <div className="mt-6 space-y-3">
               {pageItems.map((p) => (
-                <ProjectCard key={p.id} project={p} onChanged={load} authorName={user.fullName} canManage={canManage} />
+                <ProjectCard key={p.id} project={p} onChanged={load} authorName={user.fullName} canManage={canManage} canUpdate={canCreate} />
               ))}
             </div>
           )}
@@ -123,11 +123,14 @@ function ProjectCard({
   onChanged,
   authorName,
   canManage,
+  canUpdate,
 }: {
   project: Project;
   onChanged: () => void;
   authorName: string;
   canManage: boolean;
+  /** Progress updates and reports — false for the chairman, who only views. */
+  canUpdate: boolean;
 }) {
   const [progress, setProgress] = useState(project.progress);
   const [progressLoading, setProgressLoading] = useState(false);
@@ -256,6 +259,7 @@ function ProjectCard({
         <span className="w-10 shrink-0 text-right text-sm text-body">{project.progress}%</span>
       </div>
 
+      {canUpdate && (
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <input
           type="number"
@@ -279,6 +283,7 @@ function ProjectCard({
           {showReportForm ? 'Cancel' : '+ Add report'}
         </button>
       </div>
+      )}
       {progressError && <p className="mt-2 text-xs text-danger">{progressError}</p>}
 
       {showReportForm && (

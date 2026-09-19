@@ -26,7 +26,7 @@ export default function AccessLogPage() {
   const [status, setStatus] = useState<StatusFilter>('ALL');
 
   useEffect(() => {
-    if (user?.role !== 'ADMIN') return;
+    if (user?.role !== 'ADMIN' && user?.role !== 'CHAIRMAN') return;
     apiFetch<AccessLogEntry[]>('/access-log')
       .then(setEntries)
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Failed to load access log.'));
@@ -50,7 +50,7 @@ export default function AccessLogPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-4xl">
           <div className="flex flex-wrap items-end justify-between gap-3">
