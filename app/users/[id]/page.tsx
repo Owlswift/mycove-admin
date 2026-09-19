@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api';
-import { AdminUser, DonationEntry, DuesLedgerEntry, LevyPaymentEntry, PledgeEntry } from '@/lib/types';
+import { AdminUser, DonationEntry, DuesLedgerEntry, LevyPaymentEntry, PledgeEntry, Role } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
@@ -22,6 +22,77 @@ function formatDateTime(iso: string): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-NG', { dateStyle: 'medium' });
+}
+
+const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
+
+/**
+ * Lets an admin also make a resident staff — e.g. the chairman. It's the
+ * same account and password: on the mobile app they sign in as a resident,
+ * and on this website they pick their staff role in the sign-in dropdown.
+ */
+function StaffAccessCard({
+  profile,
+  onSaved,
+}: {
+  profile: AdminUser;
+  onSaved: (staffRoles: Role[]) => void;
+}) {
+  const [selected, setSelected] = useState<Role[]>(profile.staffRoles ?? []);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  function toggle(role: Role) {
+    setMessage('');
+    setSelected((cur) => (cur.includes(role) ? cur.filter((r) => r !== role) : [...cur, role]));
+  }
+
+  async function save() {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<{ staffRoles: Role[] }>(`/admin/users/${profile.id}/staff-roles`, {
+        method: 'PATCH',
+        body: JSON.stringify({ staffRoles: selected }),
+      });
+      onSaved(result.staffRoles);
+      setMessage('Saved. Changes apply the next time they sign in.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save staff roles.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-divider bg-surface p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-body">Staff access</p>
+      <p className="mt-1 text-sm text-body">
+        Also give {profile.fullName.split(' ')[0]} a role on this website. They keep the same phone number and
+        password, and stay a resident on the mobile app.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+        {GRANTABLE_STAFF_ROLES.map((role) => (
+          <label key={role} className="flex items-center gap-2 text-sm text-text">
+            <input type="checkbox" checked={selected.includes(role)} onChange={() => toggle(role)} />
+            {ROLE_LABELS[role]}
+          </label>
+        ))}
+      </div>
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving}
+        className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+      >
+        {saving ? 'Saving…' : 'Save staff access'}
+      </button>
+    </div>
+  );
 }
 
 export default function UserDetailPage() {
@@ -99,10 +170,19 @@ export default function UserDetailPage() {
                       <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">Active</span>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-body">{ROLE_LABELS[profile.role]}</p>
+                  <p className="mt-1 text-sm text-body">
+                    {[ROLE_LABELS[profile.role], ...(profile.staffRoles ?? []).map((r) => ROLE_LABELS[r])].join(' · ')}
+                  </p>
                 </div>
                 <p className="text-xs text-body">Member since {formatDate(profile.createdAt)}</p>
               </div>
+
+              {profile.role === 'RESIDENT' && (
+                <StaffAccessCard
+                  profile={profile}
+                  onSaved={(staffRoles) => setProfile({ ...profile, staffRoles })}
+                />
+              )}
 
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="rounded-lg border border-divider bg-surface p-5">

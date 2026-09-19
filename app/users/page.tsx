@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
-import { AdminUser } from '@/lib/types';
+import { AdminUser, Role } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import { usePaginatedList } from '@/lib/use-paginated-list';
 import CreateUserModal from '@/components/CreateUserModal';
@@ -121,7 +121,9 @@ export default function UsersPage() {
     ) ?? [];
   const residents = searched.filter((u) => u.role === 'RESIDENT');
   const guards = searched.filter((u) => u.role === 'GUARD');
-  const admins = searched.filter((u) => u.role === 'ADMIN' || u.role === 'FINANCE_SECRETARY' || u.role === 'PROJECT_ADMIN' || u.role === 'CHAIRMAN');
+  // A resident who also holds a staff role (e.g. the chairman) appears here as
+  // well as under Residents — same account, two hats.
+  const admins = searched.filter((u) => staffRolesOf(u).length > 0);
 
   return (
     <AppShell user={user} allow={['ADMIN']}>
@@ -270,6 +272,13 @@ function SetGuardPasswordModal({
   );
 }
 
+const STAFF_ROLES: Role[] = ['ADMIN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN', 'CHAIRMAN'];
+
+/** Every staff role this person holds — their primary role (if it's a staff one) plus any extra ones a resident has been given. */
+function staffRolesOf(u: AdminUser): Role[] {
+  return [...(STAFF_ROLES.includes(u.role) ? [u.role] : []), ...(u.staffRoles ?? [])];
+}
+
 function UserSection({
   title,
   users,
@@ -321,9 +330,13 @@ function UserSection({
                 </td>
                 {showRole && (
                   <td className="px-4 py-3">
-                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-title">
-                      {ROLE_LABELS[user.role]}
-                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {staffRolesOf(user).map((r) => (
+                        <span key={r} className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-title">
+                          {ROLE_LABELS[r]}
+                        </span>
+                      ))}
+                    </div>
                   </td>
                 )}
                 <td className="px-4 py-3 text-body">{user.phone}</td>

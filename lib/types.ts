@@ -5,6 +5,8 @@ export interface AdminUser {
   phone: string;
   fullName: string;
   role: Role;
+  /** Extra roles a resident also holds (e.g. Chairman) — same account, chosen at sign-in. */
+  staffRoles?: Role[];
   house: string | null;
   email: string | null;
   emergencyContactName: string | null;

@@ -108,6 +108,12 @@ export default function AppShell({
     }
   }, [allow, user.role, router]);
 
+  // An account created by an admin starts on a temporary password — make
+  // them choose their own before anything else in the dashboard opens.
+  useEffect(() => {
+    if (user.mustResetPassword) router.replace('/set-password');
+  }, [user.mustResetPassword, router]);
+
   // Identify the admin once per shell mount and track every route change.
   useEffect(() => {
     identifyAdmin({ adminId: user.id, adminRole: user.role });
@@ -132,7 +138,7 @@ export default function AppShell({
     ...group,
     items: group.items.filter((item) => item.roles.includes(user.role)),
   })).filter((group) => group.items.length > 0);
-  const blocked = allow && !allow.includes(user.role);
+  const blocked = (allow && !allow.includes(user.role)) || user.mustResetPassword;
 
   const sidebarContent = (
     <>
