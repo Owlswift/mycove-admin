@@ -7,7 +7,7 @@ import { AdminUser } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import { usePaginatedList } from '@/lib/use-paginated-list';
 import CreateUserModal from '@/components/CreateUserModal';
-import AppShell from '@/components/AppShell';
+import AppShell, { ROLE_LABELS } from '@/components/AppShell';
 import Pagination from '@/components/Pagination';
 import SearchInput from '@/components/SearchInput';
 
@@ -121,7 +121,7 @@ export default function UsersPage() {
     ) ?? [];
   const residents = searched.filter((u) => u.role === 'RESIDENT');
   const guards = searched.filter((u) => u.role === 'GUARD');
-  const admins = searched.filter((u) => u.role === 'ADMIN' || u.role === 'FINANCE_SECRETARY' || u.role === 'PROJECT_ADMIN');
+  const admins = searched.filter((u) => u.role === 'ADMIN' || u.role === 'FINANCE_SECRETARY' || u.role === 'PROJECT_ADMIN' || u.role === 'CHAIRMAN');
 
   return (
     <AppShell user={user} allow={['ADMIN']}>
@@ -185,6 +185,7 @@ export default function UsersPage() {
           />
           <UserSection
             title="Staff"
+            showRole
             users={admins}
             onReset={handleResetPassword}
             resettingId={resettingId}
@@ -277,8 +278,10 @@ function UserSection({
   onToggleActive,
   togglingId,
   currentUserId,
+  showRole = false,
 }: {
   title: string;
+  showRole?: boolean;
   users: AdminUser[];
   onReset: (user: AdminUser) => void;
   resettingId: string | null;
@@ -300,6 +303,7 @@ function UserSection({
           <thead>
             <tr className="text-left text-body">
               <th className="px-4 py-3 font-medium">Name</th>
+              {showRole && <th className="px-4 py-3 font-medium">Role</th>}
               <th className="px-4 py-3 font-medium">Phone</th>
               <th className="px-4 py-3 font-medium">House</th>
               <th className="px-4 py-3 font-medium">Status</th>
@@ -315,6 +319,13 @@ function UserSection({
                     {user.fullName}
                   </Link>
                 </td>
+                {showRole && (
+                  <td className="px-4 py-3">
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-title">
+                      {ROLE_LABELS[user.role]}
+                    </span>
+                  </td>
+                )}
                 <td className="px-4 py-3 text-body">{user.phone}</td>
                 <td className="px-4 py-3 text-body">{user.house ?? '—'}</td>
                 <td className="px-4 py-3">

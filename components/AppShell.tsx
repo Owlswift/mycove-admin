@@ -79,6 +79,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   ADMIN: 'Admin',
   FINANCE_SECRETARY: 'Finance Secretary',
   PROJECT_ADMIN: 'Project Admin',
+  CHAIRMAN: 'Chairman',
 };
 
 /** First page each role lands on — also where a role gets bounced if it hits a page it can't use. */
