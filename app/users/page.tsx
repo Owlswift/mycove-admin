@@ -306,13 +306,14 @@ function staffRolesOf(u: AdminUser): Role[] {
 }
 
 /**
- * The chairman resets staff passwords; an admin looks after residents and
- * guards. Nobody resets their own here — that's "Change password".
+ * The admin looks after residents and guards; staff accounts are the
+ * chairman's. Nobody manages their own here — password changes go through
+ * "Change password".
  */
-function canResetPassword(viewer: Role, target: AdminUser, viewerId: string): boolean {
+function canManage(viewer: Role, target: AdminUser, viewerId: string): boolean {
   if (target.id === viewerId) return false;
-  if (viewer === 'CHAIRMAN') return true;
-  return staffRolesOf(target).length === 0;
+  const targetIsStaff = staffRolesOf(target).length > 0;
+  return viewer === 'CHAIRMAN' ? targetIsStaff : !targetIsStaff;
 }
 
 function UserSection({
@@ -405,7 +406,7 @@ function UserSection({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {user.active && canResetPassword(viewerRole, user, currentUserId) && (
+                  {user.active && canManage(viewerRole, user, currentUserId) && (
                     <button
                       onClick={() => onReset(user)}
                       disabled={resettingId === user.id}
@@ -420,7 +421,7 @@ function UserSection({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {viewerRole === 'CHAIRMAN' && user.id !== currentUserId && (
+                  {canManage(viewerRole, user, currentUserId) && (
                     <button
                       onClick={() => onToggleActive(user)}
                       disabled={togglingId === user.id}
