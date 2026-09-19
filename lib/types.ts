@@ -9,6 +9,9 @@ export interface AdminUser {
   residentType?: ResidentType;
   /** 'YYYY-MM' the resident moved in or began operating — dues are billed from here. null until recorded. */
   moveInMonth?: string | null;
+  /** Day and month only — entered by the resident in the app, or by the admin. */
+  birthMonth?: number | null;
+  birthDay?: number | null;
   /** false for household members — their dues are recorded against the resident who invited them. */
   duesLiable?: boolean;
   /** Extra roles a resident also holds (e.g. Chairman) — same account, chosen at sign-in. */
@@ -103,7 +106,7 @@ export interface Pledge {
   user: { fullName: string; phone: string; house: string | null };
 }
 
-export type SpotlightCategory = 'PERSON' | 'BUSINESS';
+export type SpotlightCategory = 'PERSON' | 'BUSINESS' | 'BIRTHDAY';
 
 export interface Spotlight {
   id: string;

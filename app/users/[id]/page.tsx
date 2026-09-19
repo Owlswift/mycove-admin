@@ -179,6 +179,92 @@ function MoveInCard({
   );
 }
 
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/**
+ * A resident's birthday (day and month). Residents add their own in the
+ * app; this is for anyone who hasn't. Birthdays put the resident on the
+ * estate spotlight the week they fall.
+ */
+function BirthdayCard({
+  profile,
+  onSaved,
+}: {
+  profile: AdminUser;
+  onSaved: (month: number, day: number) => void;
+}) {
+  const [month, setMonth] = useState(profile.birthMonth ? String(profile.birthMonth) : '');
+  const [day, setDay] = useState(profile.birthDay ? String(profile.birthDay) : '');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function save() {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<{ birthMonth: number; birthDay: number }>(`/admin/users/${profile.id}/birthday`, {
+        method: 'PATCH',
+        body: JSON.stringify({ month: Number(month), day: Number(day) }),
+      });
+      onSaved(result.birthMonth, result.birthDay);
+      setMessage(`Saved. ${profile.fullName.split(' ')[0]}'s birthday is ${result.birthDay} ${MONTH_NAMES[result.birthMonth - 1]}.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save the birthday.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const unchanged = Number(month) === (profile.birthMonth ?? 0) && Number(day) === (profile.birthDay ?? 0);
+
+  return (
+    <div className="mt-4 rounded-lg border border-divider bg-surface p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-body">Birthday</p>
+      <p className="mt-1 text-sm text-body">
+        Day and month only. Residents can add their own in the app; a week before it, they&apos;re asked for a photo
+        and whether there&apos;ll be a party, and they go on the estate spotlight.
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <select
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          aria-label="Birthday month"
+          className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+        >
+          <option value="">Month</option>
+          {MONTH_NAMES.map((name, i) => (
+            <option key={name} value={i + 1}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <input
+          type="number"
+          min={1}
+          max={31}
+          value={day}
+          onChange={(e) => setDay(e.target.value)}
+          aria-label="Birthday day"
+          placeholder="Day"
+          className="w-20 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || !month || !day || unchanged}
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save birthday'}
+        </button>
+      </div>
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
+    </div>
+  );
+}
+
 const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
 /** What an admin may hand out — the chairman role is the chairman's alone. */
 const ADMIN_GRANTABLE: Role[] = ['FINANCE_SECRETARY', 'PROJECT_ADMIN'];
@@ -355,6 +441,13 @@ export default function UserDetailPage() {
                 <MoveInCard
                   profile={profile}
                   onSaved={(moveInMonth) => setProfile({ ...profile, moveInMonth })}
+                />
+              )}
+
+              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+                <BirthdayCard
+                  profile={profile}
+                  onSaved={(birthMonth, birthDay) => setProfile({ ...profile, birthMonth, birthDay })}
                 />
               )}
 

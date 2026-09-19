@@ -11,7 +11,7 @@ import MediaPreview from '@/components/MediaPreview';
 import Pagination from '@/components/Pagination';
 import SearchInput from '@/components/SearchInput';
 
-type CategoryFilter = 'ALL' | 'PERSON' | 'BUSINESS';
+type CategoryFilter = 'ALL' | 'PERSON' | 'BUSINESS' | 'BIRTHDAY';
 type ActiveFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
 
 export default function SpotlightsPage() {
@@ -109,6 +109,7 @@ export default function SpotlightsPage() {
                 <option value="ALL">All categories</option>
                 <option value="PERSON">Person</option>
                 <option value="BUSINESS">Business</option>
+                <option value="BIRTHDAY">Birthday</option>
               </select>
               <select
                 value={activeFilter}
@@ -141,7 +142,7 @@ export default function SpotlightsPage() {
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-title">{s.name}</p>
                       <span className="rounded-full bg-accent2-soft px-2 py-0.5 text-xs font-medium text-accent2-hover">
-                        {s.category === 'PERSON' ? 'Person' : 'Business'}
+                        {s.category === 'PERSON' ? 'Person' : s.category === 'BIRTHDAY' ? 'Birthday' : 'Business'}
                       </span>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
