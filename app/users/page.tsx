@@ -33,7 +33,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN') void loadUsers();
+    if (user?.role === 'ADMIN' || user?.role === 'CHAIRMAN') void loadUsers();
   }, [user, loadUsers]);
 
   function handleCreated(defaultPassword: string | null, fullName: string) {
@@ -104,7 +104,7 @@ export default function UsersPage() {
 
   if (users === null && !error) {
     return (
-      <AppShell user={user} allow={['ADMIN']}>
+      <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
         <div className="flex flex-1 items-center justify-center px-6 py-8 text-body">Loading…</div>
       </AppShell>
     );
@@ -131,7 +131,7 @@ export default function UsersPage() {
   const admins = searched.filter((u) => staffRolesOf(u).length > 0);
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">
@@ -141,12 +141,14 @@ export default function UsersPage() {
             </div>
             <div className="flex items-center gap-2">
               <SearchInput value={search} onChange={setSearch} placeholder="Search name, phone, house…" />
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-              >
-                + New account
-              </button>
+              {user.role === 'ADMIN' && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+                >
+                  + New account
+                </button>
+              )}
             </div>
           </div>
 
@@ -168,7 +170,7 @@ export default function UsersPage() {
 
           {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
-          {missingMoveIn.length > 0 && (
+          {user.role === 'ADMIN' && missingMoveIn.length > 0 && (
             <div className="mt-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <p className="font-medium">
                 {missingMoveIn.length} resident{missingMoveIn.length === 1 ? ' has' : 's have'} no move-in month recorded.
@@ -196,6 +198,7 @@ export default function UsersPage() {
             onToggleActive={handleToggleActive}
             togglingId={togglingId}
             currentUserId={user.id}
+            viewerRole={user.role}
           />
           <UserSection
             title="Security Guards"
@@ -205,6 +208,7 @@ export default function UsersPage() {
             onToggleActive={handleToggleActive}
             togglingId={togglingId}
             currentUserId={user.id}
+            viewerRole={user.role}
           />
           <UserSection
             title="Staff"
@@ -215,6 +219,7 @@ export default function UsersPage() {
             onToggleActive={handleToggleActive}
             togglingId={togglingId}
             currentUserId={user.id}
+            viewerRole={user.role}
           />
         </div>
 
@@ -300,6 +305,16 @@ function staffRolesOf(u: AdminUser): Role[] {
   return [...(STAFF_ROLES.includes(u.role) ? [u.role] : []), ...(u.staffRoles ?? [])];
 }
 
+/**
+ * The chairman resets staff passwords; an admin looks after residents and
+ * guards. Nobody resets their own here — that's "Change password".
+ */
+function canResetPassword(viewer: Role, target: AdminUser, viewerId: string): boolean {
+  if (target.id === viewerId) return false;
+  if (viewer === 'CHAIRMAN') return true;
+  return staffRolesOf(target).length === 0;
+}
+
 function UserSection({
   title,
   users,
@@ -308,6 +323,7 @@ function UserSection({
   onToggleActive,
   togglingId,
   currentUserId,
+  viewerRole,
   showRole = false,
 }: {
   title: string;
@@ -318,6 +334,7 @@ function UserSection({
   onToggleActive: (user: AdminUser) => void;
   togglingId: string | null;
   currentUserId: string;
+  viewerRole: Role;
 }) {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(users);
 
@@ -388,7 +405,7 @@ function UserSection({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {user.role !== 'ADMIN' && user.active && (
+                  {user.active && canResetPassword(viewerRole, user, currentUserId) && (
                     <button
                       onClick={() => onReset(user)}
                       disabled={resettingId === user.id}
@@ -403,7 +420,7 @@ function UserSection({
                   )}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {user.id !== currentUserId && (
+                  {viewerRole === 'CHAIRMAN' && user.id !== currentUserId && (
                     <button
                       onClick={() => onToggleActive(user)}
                       disabled={togglingId === user.id}

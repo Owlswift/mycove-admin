@@ -11,7 +11,7 @@ interface Props {
 export default function CreateUserModal({ onClose, onCreated }: Props) {
   const [phone, setPhone] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN' | 'CHAIRMAN'>('RESIDENT');
+  const [role, setRole] = useState<'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN'>('RESIDENT');
   const [house, setHouse] = useState('');
   const [residentType, setResidentType] = useState<'REGULAR' | 'COMMERCIAL'>('REGULAR');
   const [moveInMonth, setMoveInMonth] = useState('');
@@ -108,7 +108,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
             <select
               value={role}
               onChange={(e) =>
-                setRole(e.target.value as 'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN' | 'CHAIRMAN')
+                setRole(e.target.value as 'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN')
               }
               className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
             >
@@ -116,7 +116,6 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
               <option value="GUARD">Security guard</option>
               <option value="FINANCE_SECRETARY">Finance Secretary</option>
               <option value="PROJECT_ADMIN">Project Admin</option>
-              <option value="CHAIRMAN">Estate Chairman (mobile app)</option>
             </select>
           </div>
           {role === 'RESIDENT' && (

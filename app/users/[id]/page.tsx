@@ -180,6 +180,8 @@ function MoveInCard({
 }
 
 const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
+/** What an admin may hand out — the chairman role is the chairman's alone. */
+const ADMIN_GRANTABLE: Role[] = ['FINANCE_SECRETARY', 'PROJECT_ADMIN'];
 
 /**
  * Lets an admin also make a resident staff — e.g. the chairman. It's the
@@ -188,9 +190,11 @@ const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'FINANCE_SECRETARY', 'PROJECT
  */
 function StaffAccessCard({
   profile,
+  viewerRole,
   onSaved,
 }: {
   profile: AdminUser;
+  viewerRole: Role;
   onSaved: (staffRoles: Role[]) => void;
 }) {
   const [selected, setSelected] = useState<Role[]>(profile.staffRoles ?? []);
@@ -231,8 +235,16 @@ function StaffAccessCard({
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
         {GRANTABLE_STAFF_ROLES.map((role) => (
           <label key={role} className="flex items-center gap-2 text-sm text-text">
-            <input type="checkbox" checked={selected.includes(role)} onChange={() => toggle(role)} />
+            <input
+              type="checkbox"
+              checked={selected.includes(role)}
+              disabled={viewerRole !== 'CHAIRMAN' && !ADMIN_GRANTABLE.includes(role)}
+              onChange={() => toggle(role)}
+            />
             {ROLE_LABELS[role]}
+            {viewerRole !== 'CHAIRMAN' && !ADMIN_GRANTABLE.includes(role) && (
+              <span className="text-xs text-body">(chairman only)</span>
+            )}
           </label>
         ))}
       </div>
@@ -263,7 +275,7 @@ export default function UserDetailPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (currentUser?.role !== 'ADMIN') return;
+    if (currentUser?.role !== 'ADMIN' && currentUser?.role !== 'CHAIRMAN') return;
     apiFetch<AdminUser>(`/admin/users/${userId}`)
       .then(setProfile)
       .catch((err) => setError(err instanceof ApiError ? err.message : 'Failed to load user.'));
@@ -297,7 +309,7 @@ export default function UserDetailPage() {
   const totalLeviesPaid = levyPayments?.reduce((sum, p) => sum + p.levy.amount, 0) ?? 0;
 
   return (
-    <AppShell user={currentUser} allow={['ADMIN']}>
+    <AppShell user={currentUser} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-4xl">
           <Link href="/users" className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover">
@@ -332,14 +344,14 @@ export default function UserDetailPage() {
                 <p className="text-xs text-body">Member since {formatDate(profile.createdAt)}</p>
               </div>
 
-              {profile.role === 'RESIDENT' && (
+              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
                 <ResidentTypeCard
                   profile={profile}
                   onSaved={(residentType) => setProfile({ ...profile, residentType })}
                 />
               )}
 
-              {profile.role === 'RESIDENT' && (
+              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
                 <MoveInCard
                   profile={profile}
                   onSaved={(moveInMonth) => setProfile({ ...profile, moveInMonth })}
@@ -349,6 +361,7 @@ export default function UserDetailPage() {
               {profile.role === 'RESIDENT' && (
                 <StaffAccessCard
                   profile={profile}
+                  viewerRole={currentUser.role}
                   onSaved={(staffRoles) => setProfile({ ...profile, staffRoles })}
                 />
               )}

@@ -22,6 +22,7 @@ import {
   FileText,
   Settings,
   LogOut,
+  KeyRound,
   Menu,
   X,
   type LucideIcon,
@@ -41,7 +42,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Residents & Access',
     items: [
-      { href: '/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN'] },
+      { href: '/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN', 'CHAIRMAN'] },
       { href: '/household-invites', label: 'Household Invites', icon: UserPlus, roles: ['ADMIN'] },
       { href: '/access-log', label: 'Access Log', icon: ClipboardList, roles: ['ADMIN', 'CHAIRMAN'] },
     ],
@@ -183,6 +184,13 @@ export default function AppShell({
           <p className="truncate text-sm font-medium text-text">{user.fullName}</p>
           {user.estateName && <p className="truncate text-xs text-body">{user.estateName}</p>}
         </div>
+        <Link
+          href="/account/password"
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-body hover:bg-accent-soft hover:text-text"
+        >
+          <KeyRound size={17} strokeWidth={2} />
+          Change password
+        </Link>
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-body hover:bg-accent-soft hover:text-text"
