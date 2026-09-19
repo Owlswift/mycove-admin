@@ -16,6 +16,12 @@ import SearchInput from '@/components/SearchInput';
 
 type DuesStatusFilter = 'ALL' | 'OWING' | 'PAID';
 type TypeFilter = 'ALL' | 'REGULAR' | 'COMMERCIAL';
+type DuesTab = 'collections' | 'rates';
+
+const TABS: { id: DuesTab; label: string }[] = [
+  { id: 'collections', label: 'Collections' },
+  { id: 'rates', label: 'Rates' },
+];
 
 function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString('en-NG')}`;
@@ -35,6 +41,7 @@ export default function DuesPage() {
   const [roster, setRoster] = useState<DuesRoster | null>(null);
   const [error, setError] = useState('');
 
+  const [tab, setTab] = useState<DuesTab>('collections');
   const [recordingFor, setRecordingFor] = useState<ResidentDues | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<DuesStatusFilter>('ALL');
@@ -125,6 +132,7 @@ export default function DuesPage() {
                 they owe is everything billed so far minus everything they&apos;ve paid — in the app and before it.
               </p>
             </div>
+            {tab === 'collections' && (
             <div className="flex shrink-0 items-center gap-3">
               {isFinanceSecretary && (
                 <Link
@@ -142,12 +150,40 @@ export default function DuesPage() {
                 Export CSV
               </button>
             </div>
+            )}
+          </div>
+
+          <div role="tablist" aria-label="Dues sections" className="mt-6 flex gap-1 border-b border-divider">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                id={`dues-tab-${t.id}`}
+                role="tab"
+                type="button"
+                aria-selected={tab === t.id}
+                aria-controls={`dues-panel-${t.id}`}
+                onClick={() => setTab(t.id)}
+                className={`-mb-px border-b-2 px-4 py-2 text-sm font-medium ${
+                  tab === t.id
+                    ? 'border-accent text-title'
+                    : 'border-transparent text-body hover:text-title'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
           {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
-          <DuesRatesPanel canEdit={isFinanceSecretary} onChanged={() => void load()} />
+          {tab === 'rates' && (
+            <div id="dues-panel-rates" role="tabpanel" aria-labelledby="dues-tab-rates">
+              <DuesRatesPanel canEdit={isFinanceSecretary} onChanged={() => void load()} />
+            </div>
+          )}
 
+          {tab === 'collections' && (
+          <div id="dues-panel-collections" role="tabpanel" aria-labelledby="dues-tab-collections">
           {roster === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
 
           {roster && (
@@ -260,6 +296,8 @@ export default function DuesPage() {
                 />
               </div>
             </div>
+          )}
+          </div>
           )}
         </div>
       </div>
