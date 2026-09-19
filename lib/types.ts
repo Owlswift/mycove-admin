@@ -5,6 +5,12 @@ export interface AdminUser {
   phone: string;
   fullName: string;
   role: Role;
+  /** Regular or commercial — commercial residents pay their own dues rate. */
+  residentType?: ResidentType;
+  /** 'YYYY-MM' the resident moved in or began operating — dues are billed from here. null until recorded. */
+  moveInMonth?: string | null;
+  /** false for household members — their dues are recorded against the resident who invited them. */
+  duesLiable?: boolean;
   /** Extra roles a resident also holds (e.g. Chairman) — same account, chosen at sign-in. */
   staffRoles?: Role[];
   house: string | null;
@@ -135,19 +141,82 @@ export interface FinanceTotals {
   outstanding: number;
 }
 
+export type ResidentType = 'REGULAR' | 'COMMERCIAL';
+
+export const RESIDENT_TYPE_LABELS: Record<ResidentType, string> = {
+  REGULAR: 'Regular',
+  COMMERCIAL: 'Commercial',
+};
+
 export interface ResidentDues {
   id: string;
   fullName: string;
   house: string | null;
   phone: string;
+  residentType: ResidentType;
+  /** Everything they still owe, across every month billed so far. */
   duesBalance: number;
+  /** Months fully covered by what they've paid. */
   monthsPaid: number;
+  monthsOwed: number;
+  /** Months billed since their billing began. */
+  monthsElapsed: number;
+  /** 'YYYY-MM' — when their billing began; null until the estate has a rate. */
+  billingStart: string | null;
+  /** 'YYYY-MM' recorded on their profile; null means billing is counted from when they joined the app. */
+  moveInMonth: string | null;
 }
 
 export interface DuesRoster {
-  monthlyAmount: number | null;
+  /** What each resident type pays this month — null until a rate is set. */
+  currentRates: { REGULAR: number | null; COMMERCIAL: number | null };
   totals: FinanceTotals;
   residents: ResidentDues[];
+}
+
+export interface DuesRateRecord {
+  id: string;
+  residentType: ResidentType;
+  monthlyAmount: number;
+  /** 'YYYY-MM' — the first month this rate is charged for. */
+  effectiveMonth: string;
+  /** When the rate was entered. */
+  createdAt: string;
+  createdBy: { id: string; fullName: string } | null;
+}
+
+export interface DuesRates {
+  currentMonth: string;
+  current: Record<ResidentType, { monthlyAmount: number; effectiveMonth: string; usesRegularRate: boolean } | null>;
+  rates: DuesRateRecord[];
+}
+
+export type ImportRowStatus = 'OK' | 'DUPLICATE' | 'ERROR';
+
+export interface DuesImportRow {
+  line: number;
+  status: ImportRowStatus;
+  message: string | null;
+  phone: string;
+  residentId: string | null;
+  residentName: string | null;
+  house: string | null;
+  residentType: ResidentType | null;
+  amount: number | null;
+  periodStart: string | null;
+  periodEnd: string | null;
+  months: number | null;
+  expected: number | null;
+  difference: number | null;
+  billingStart: string | null;
+  moveInSet: boolean;
+  /** Positive owes, negative is ahead; null when the estate has no rates. */
+  balanceAfter: number | null;
+}
+
+export interface DuesImportPreview {
+  results: DuesImportRow[];
+  summary: { total: number; ok: number; duplicates: number; errors: number; noRates: boolean };
 }
 
 export interface LevyResidentStatus {

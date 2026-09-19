@@ -13,6 +13,8 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN' | 'CHAIRMAN'>('RESIDENT');
   const [house, setHouse] = useState('');
+  const [residentType, setResidentType] = useState<'REGULAR' | 'COMMERCIAL'>('REGULAR');
+  const [moveInMonth, setMoveInMonth] = useState('');
   const [streets, setStreets] = useState<string[]>([]);
   const [street, setStreet] = useState('');
   const [houseNumber, setHouseNumber] = useState('');
@@ -50,6 +52,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
           phone,
           fullName,
           role,
+          ...(role === 'RESIDENT' && { residentType, moveInMonth }),
           ...(usesStreets
             ? { street: street || undefined, houseNumber: houseNumber.trim() || undefined }
             : { house: house.trim() || undefined }),
@@ -116,6 +119,39 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
               <option value="CHAIRMAN">Estate Chairman (mobile app)</option>
             </select>
           </div>
+          {role === 'RESIDENT' && (
+            <div>
+              <label htmlFor="resident-type" className="block text-sm font-medium text-text">
+                Resident type
+              </label>
+              <select
+                id="resident-type"
+                value={residentType}
+                onChange={(e) => setResidentType(e.target.value as 'REGULAR' | 'COMMERCIAL')}
+                className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
+              >
+                <option value="REGULAR">Regular resident</option>
+                <option value="COMMERCIAL">Commercial (pays the commercial dues rate)</option>
+              </select>
+            </div>
+          )}
+          {role === 'RESIDENT' && (
+            <div>
+              <label htmlFor="move-in-month" className="block text-sm font-medium text-text">
+                Moved in (or started operating)
+              </label>
+              <input
+                id="move-in-month"
+                type="month"
+                required
+                max={new Date().toISOString().slice(0, 7)}
+                value={moveInMonth}
+                onChange={(e) => setMoveInMonth(e.target.value)}
+                className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
+              />
+              <p className="mt-1 text-xs text-body">Month and year. Dues are billed from this month.</p>
+            </div>
+          )}
           {isGuard && (
             <div>
               <label className="block text-sm font-medium text-text">Password</label>

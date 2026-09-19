@@ -120,6 +120,11 @@ export default function UsersPage() {
         (u.house?.toLowerCase().includes(q) ?? false),
     ) ?? [];
   const residents = searched.filter((u) => u.role === 'RESIDENT');
+  // Dues are billed from the move-in month the admin records, so any resident
+  // who pays dues without one needs it filling in.
+  const missingMoveIn = (users ?? []).filter(
+    (u) => u.role === 'RESIDENT' && u.active && u.duesLiable !== false && !u.moveInMonth,
+  );
   const guards = searched.filter((u) => u.role === 'GUARD');
   // A resident who also holds a staff role (e.g. the chairman) appears here as
   // well as under Residents — same account, two hats.
@@ -162,6 +167,22 @@ export default function UsersPage() {
           )}
 
           {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+
+          {missingMoveIn.length > 0 && (
+            <div className="mt-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-medium">
+                {missingMoveIn.length} resident{missingMoveIn.length === 1 ? ' has' : 's have'} no move-in month recorded.
+              </p>
+              <p className="mt-1">
+                Dues are billed from the month and year a resident moved in or began operating, and only you can set it.
+                Open each resident marked &quot;Move-in not set&quot; below and enter it, so their balance is worked out
+                correctly.{' '}
+                <Link href={`/users/${missingMoveIn[0]!.id}`} className="font-medium underline">
+                  Start with {missingMoveIn[0]!.fullName}
+                </Link>
+              </p>
+            </div>
+          )}
 
           {q && searched.length === 0 && (
             <p className="mt-6 text-sm text-body">No users match &quot;{search}&quot;.</p>
@@ -327,6 +348,16 @@ function UserSection({
                   <Link href={`/users/${user.id}`} className="text-title hover:text-accent hover:underline">
                     {user.fullName}
                   </Link>
+                  {user.role === 'RESIDENT' && user.active && user.duesLiable !== false && !user.moveInMonth && (
+                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                      Move-in not set
+                    </span>
+                  )}
+                  {user.residentType === 'COMMERCIAL' && (
+                    <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-title">
+                      Commercial
+                    </span>
+                  )}
                 </td>
                 {showRole && (
                   <td className="px-4 py-3">

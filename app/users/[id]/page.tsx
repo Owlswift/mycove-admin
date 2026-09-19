@@ -5,7 +5,17 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api';
-import { AdminUser, DonationEntry, DuesLedgerEntry, LevyPaymentEntry, PledgeEntry, Role } from '@/lib/types';
+import {
+  AdminUser,
+  DonationEntry,
+  DuesLedgerEntry,
+  LevyPaymentEntry,
+  PledgeEntry,
+  RESIDENT_TYPE_LABELS,
+  ResidentType,
+  Role,
+} from '@/lib/types';
+import { formatMonthKey } from '@/lib/months';
 import { useCurrentUser } from '@/lib/use-current-user';
 import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
@@ -22,6 +32,151 @@ function formatDateTime(iso: string): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-NG', { dateStyle: 'medium' });
+}
+
+/**
+ * Regular or commercial — commercial residents pay their own dues rate. The
+ * type applies to everything they're billed, past months included, so
+ * changing it moves their balance.
+ */
+function ResidentTypeCard({
+  profile,
+  onSaved,
+}: {
+  profile: AdminUser;
+  onSaved: (type: ResidentType) => void;
+}) {
+  const [type, setType] = useState<ResidentType>(profile.residentType ?? 'REGULAR');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function save() {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<{ residentType: ResidentType }>(`/admin/users/${profile.id}/resident-type`, {
+        method: 'PATCH',
+        body: JSON.stringify({ residentType: type }),
+      });
+      onSaved(result.residentType);
+      setMessage(`Saved. ${profile.fullName.split(' ')[0]} is now billed at the ${RESIDENT_TYPE_LABELS[result.residentType].toLowerCase()} rate.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save the resident type.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-divider bg-surface p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-body">Resident type</p>
+      <p className="mt-1 text-sm text-body">
+        Commercial residents (shops, offices) pay a different monthly dues rate from regular residents. Changing this
+        applies to their whole billing history.
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <select
+          value={type}
+          onChange={(e) => {
+            setType(e.target.value as ResidentType);
+            setMessage('');
+          }}
+          aria-label="Resident type"
+          className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+        >
+          <option value="REGULAR">Regular</option>
+          <option value="COMMERCIAL">Commercial</option>
+        </select>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || type === (profile.residentType ?? 'REGULAR')}
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save type'}
+        </button>
+      </div>
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
+    </div>
+  );
+}
+
+/**
+ * The month a resident moved in or began operating. Dues are billed from
+ * here, so changing it re-works their balance — including for payments
+ * they made before the app.
+ */
+function MoveInCard({
+  profile,
+  onSaved,
+}: {
+  profile: AdminUser;
+  onSaved: (moveInMonth: string) => void;
+}) {
+  const [month, setMonth] = useState(profile.moveInMonth ?? '');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function save() {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<{ moveInMonth: string }>(`/admin/users/${profile.id}/move-in`, {
+        method: 'PATCH',
+        body: JSON.stringify({ moveInMonth: month }),
+      });
+      onSaved(result.moveInMonth);
+      setMessage(`Saved. Dues for ${profile.fullName.split(' ')[0]} are now billed from ${formatMonthKey(result.moveInMonth)}.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save the move-in month.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-divider bg-surface p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-body">Moved in</p>
+      <p className="mt-1 text-sm text-body">
+        The month and year this resident moved in or began operating in the estate. Dues are billed from this month.
+        {!profile.moveInMonth && (
+          <span className="font-medium text-amber-700">
+            {' '}
+            Not recorded yet, so billing currently counts from the month they joined the app.
+          </span>
+        )}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <input
+          id="move-in-month"
+          type="month"
+          value={month}
+          max={new Date().toISOString().slice(0, 7)}
+          onChange={(e) => {
+            setMonth(e.target.value);
+            setMessage('');
+          }}
+          aria-label="Moved in"
+          className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || !month || month === (profile.moveInMonth ?? '')}
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save move-in month'}
+        </button>
+      </div>
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
+    </div>
+  );
 }
 
 const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
@@ -176,6 +331,20 @@ export default function UserDetailPage() {
                 </div>
                 <p className="text-xs text-body">Member since {formatDate(profile.createdAt)}</p>
               </div>
+
+              {profile.role === 'RESIDENT' && (
+                <ResidentTypeCard
+                  profile={profile}
+                  onSaved={(residentType) => setProfile({ ...profile, residentType })}
+                />
+              )}
+
+              {profile.role === 'RESIDENT' && (
+                <MoveInCard
+                  profile={profile}
+                  onSaved={(moveInMonth) => setProfile({ ...profile, moveInMonth })}
+                />
+              )}
 
               {profile.role === 'RESIDENT' && (
                 <StaffAccessCard

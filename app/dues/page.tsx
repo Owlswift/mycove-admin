@@ -1,20 +1,21 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
 import { downloadCsv } from '@/lib/csv-export';
-import { DuesRoster, ResidentDues } from '@/lib/types';
+import { formatMonthKey } from '@/lib/months';
+import { DuesRoster, ResidentDues, RESIDENT_TYPE_LABELS } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
+import DuesRatesPanel from '@/components/DuesRatesPanel';
 import Pagination from '@/components/Pagination';
 import RecordDuesPaymentModal from '@/components/RecordDuesPaymentModal';
 import SearchInput from '@/components/SearchInput';
 
 type DuesStatusFilter = 'ALL' | 'OWING' | 'PAID';
-
-const CURRENT_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR + 1 - i);
+type TypeFilter = 'ALL' | 'REGULAR' | 'COMMERCIAL';
 
 function formatMoney(amount: number): string {
   return `₦${amount.toLocaleString('en-NG')}`;
@@ -31,31 +32,24 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
 
 export default function DuesPage() {
   const { user, loading: userLoading } = useCurrentUser();
-  const [year, setYear] = useState(CURRENT_YEAR);
   const [roster, setRoster] = useState<DuesRoster | null>(null);
   const [error, setError] = useState('');
-
-  const [rateInput, setRateInput] = useState('');
-  const [rateError, setRateError] = useState('');
-  const [rateSuccess, setRateSuccess] = useState(false);
-  const [rateSaving, setRateSaving] = useState(false);
 
   const [recordingFor, setRecordingFor] = useState<ResidentDues | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<DuesStatusFilter>('ALL');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL');
 
   const isFinanceSecretary = user?.role === 'FINANCE_SECRETARY';
   // Recording an off-platform payment (cash, bank transfer) is a
   // reconciliation task, not a rate-setting one — Admin needs it too since
   // automated account/payment setup can lag behind a resident actually
-  // paying, unlike the dues-rate control below which stays Finance-only.
+  // paying, unlike changing the dues rates, which stays Finance-only.
   const canRecordPayment = user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY';
 
-  const load = useCallback(async (forYear: number) => {
+  const load = useCallback(async () => {
     try {
-      const result = await apiFetch<DuesRoster>(`/finance/dues?year=${forYear}`);
-      setRoster(result);
-      setRateInput(result.monthlyAmount !== null ? String(result.monthlyAmount) : '');
+      setRoster(await apiFetch<DuesRoster>('/finance/dues'));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to load dues status.');
     }
@@ -63,27 +57,8 @@ export default function DuesPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY' || user?.role === 'CHAIRMAN') void load(year);
-  }, [user, year, load]);
-
-  async function handleSaveRate(e: React.FormEvent) {
-    e.preventDefault();
-    setRateError('');
-    setRateSuccess(false);
-    setRateSaving(true);
-    try {
-      await apiFetch('/finance/dues-rate', {
-        method: 'POST',
-        body: JSON.stringify({ monthlyAmount: Number(rateInput) }),
-      });
-      setRateSuccess(true);
-      void load(year);
-    } catch (err) {
-      setRateError(err instanceof ApiError ? err.message : 'Failed to update dues rate.');
-    } finally {
-      setRateSaving(false);
-    }
-  }
+    if (user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY' || user?.role === 'CHAIRMAN') void load();
+  }, [user, load]);
 
   const residents = roster ? [...roster.residents].sort((a, b) => b.duesBalance - a.duesBalance) : null;
 
@@ -93,6 +68,7 @@ export default function DuesPage() {
     return residents.filter((r) => {
       if (statusFilter === 'OWING' && r.duesBalance <= 0) return false;
       if (statusFilter === 'PAID' && r.duesBalance > 0) return false;
+      if (typeFilter !== 'ALL' && r.residentType !== typeFilter) return false;
       if (!q) return true;
       return (
         r.fullName.toLowerCase().includes(q) ||
@@ -100,7 +76,7 @@ export default function DuesPage() {
         r.phone.toLowerCase().includes(q)
       );
     });
-  }, [residents, search, statusFilter]);
+  }, [residents, search, statusFilter, typeFilter]);
 
   const { page, setPage, totalPages, pageItems } = usePaginatedList(filtered);
 
@@ -111,21 +87,27 @@ export default function DuesPage() {
   function handleExport() {
     if (!residents) return;
     downloadCsv(
-      `dues-${year}.csv`,
+      `dues-${new Date().toISOString().slice(0, 10)}.csv`,
       [
         { key: 'fullName', label: 'Resident' },
+        { key: 'type', label: 'Type' },
         { key: 'house', label: 'House' },
         { key: 'phone', label: 'Phone' },
+        { key: 'billingFrom', label: 'Billing From' },
+        { key: 'moveInRecorded', label: 'Move-in Recorded' },
         { key: 'amountOwed', label: 'Amount Owed (NGN)' },
-        { key: 'monthsPaid', label: 'Months Paid' },
+        { key: 'monthsOwed', label: 'Months Owed' },
         { key: 'status', label: 'Status' },
       ],
       residents.map((r) => ({
         fullName: r.fullName,
+        type: RESIDENT_TYPE_LABELS[r.residentType],
         house: r.house ?? '',
         phone: r.phone,
+        billingFrom: formatMonthKey(r.billingStart),
+        moveInRecorded: r.moveInMonth ? 'Yes' : 'No',
         amountOwed: r.duesBalance,
-        monthsPaid: `${r.monthsPaid} of 12`,
+        monthsOwed: r.monthsOwed,
         status: r.duesBalance > 0 ? 'Owing' : 'Paid up',
       })),
     );
@@ -134,31 +116,24 @@ export default function DuesPage() {
   return (
     <AppShell user={user} allow={['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN']}>
       <div className="px-6 py-8">
-        <div className="mx-auto max-w-4xl">
-          <div className="flex items-center justify-between">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-title">Dues</h2>
-              <p className="mt-1 text-sm text-body">
-                Who&apos;s paid and who hasn&apos;t. Dues are annual, payable in one lump sum or monthly —
-                the balance below reflects what&apos;s accrued so far this fiscal year minus what&apos;s
-                actually been paid.
+              <p className="mt-1 max-w-2xl text-sm text-body">
+                Each resident is billed every month from when their billing began, at the rate for their type. What
+                they owe is everything billed so far minus everything they&apos;ve paid — in the app and before it.
               </p>
             </div>
-            <div className="flex shrink-0 items-end gap-3">
-              <div>
-                <label className="block text-xs font-medium text-body">Fiscal year</label>
-                <select
-                  value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}
-                  className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+            <div className="flex shrink-0 items-center gap-3">
+              {isFinanceSecretary && (
+                <Link
+                  href="/dues/import"
+                  className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover"
                 >
-                  {YEAR_OPTIONS.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  Import past payments
+                </Link>
+              )}
               <button
                 onClick={handleExport}
                 disabled={!residents || residents.length === 0}
@@ -170,56 +145,14 @@ export default function DuesPage() {
           </div>
 
           {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+
+          <DuesRatesPanel canEdit={isFinanceSecretary} onChanged={() => void load()} />
+
           {roster === null && !error && <p className="mt-6 text-sm text-body">Loading…</p>}
 
           {roster && (
-            <div className="mt-6 rounded-lg border border-divider bg-surface p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-body">Dues rate</p>
-              {isFinanceSecretary ? (
-                <form onSubmit={handleSaveRate} className="mt-2 flex flex-wrap items-end gap-3">
-                  <div>
-                    <label className="block text-xs text-body">Monthly amount</label>
-                    <input
-                      type="number"
-                      required
-                      min={1}
-                      placeholder="Not set yet"
-                      value={rateInput}
-                      onChange={(e) => setRateInput(e.target.value)}
-                      className="mt-1 w-40 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
-                    />
-                  </div>
-                  <p className="pb-1.5 text-xs text-body">
-                    {rateInput && !isNaN(Number(rateInput)) && `= ${formatMoney(Number(rateInput) * 12)}/year`}
-                  </p>
-                  <button
-                    type="submit"
-                    disabled={rateSaving || Number(rateInput) === roster.monthlyAmount}
-                    className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
-                  >
-                    {rateSaving ? 'Saving…' : 'Save'}
-                  </button>
-                  {rateError && <p className="w-full text-sm text-danger">{rateError}</p>}
-                  {rateSuccess && <p className="w-full text-sm text-green-700">Dues rate updated.</p>}
-                  {roster.monthlyAmount === null && !rateSuccess && (
-                    <p className="w-full text-xs text-body">
-                      No rate set yet — residents won&apos;t accrue any dues until you save one.
-                    </p>
-                  )}
-                </form>
-              ) : roster.monthlyAmount === null ? (
-                <p className="mt-1 text-sm text-body">Not set yet.</p>
-              ) : (
-                <p className="mt-1 text-lg font-semibold text-title">
-                  {formatMoney(roster.monthlyAmount)}/month ({formatMoney(roster.monthlyAmount * 12)}/year)
-                </p>
-              )}
-            </div>
-          )}
-
-          {roster && (
-            <div className="mt-6 grid grid-cols-3 gap-4">
-              <SummaryCard label={`Expected in ${year}`} value={formatMoney(roster.totals.expected)} />
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <SummaryCard label="Billed to date" value={formatMoney(roster.totals.expected)} />
               <SummaryCard label="Collected" value={formatMoney(roster.totals.collected)} />
               <SummaryCard label="Outstanding" value={formatMoney(roster.totals.outstanding)} />
             </div>
@@ -230,16 +163,27 @@ export default function DuesPage() {
           )}
 
           {residents && residents.length > 0 && (
-            <div className="mt-6 flex gap-2">
+            <div className="mt-6 flex flex-wrap gap-2">
               <SearchInput value={search} onChange={setSearch} placeholder="Search name, house, phone…" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as DuesStatusFilter)}
+                aria-label="Filter by payment status"
                 className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
               >
                 <option value="ALL">All</option>
                 <option value="OWING">Owing</option>
                 <option value="PAID">Paid up</option>
+              </select>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
+                aria-label="Filter by resident type"
+                className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+              >
+                <option value="ALL">All types</option>
+                <option value="REGULAR">Regular</option>
+                <option value="COMMERCIAL">Commercial</option>
               </select>
             </div>
           )}
@@ -256,6 +200,7 @@ export default function DuesPage() {
                     <th className="px-4 py-3 font-medium">Resident</th>
                     <th className="px-4 py-3 font-medium">House</th>
                     <th className="px-4 py-3 font-medium">Phone</th>
+                    <th className="px-4 py-3 font-medium">Billing from</th>
                     <th className="px-4 py-3 font-medium">Amount owed</th>
                     <th className="px-4 py-3 font-medium">Months paid</th>
                     {canRecordPayment && <th className="px-4 py-3 font-medium"></th>}
@@ -264,9 +209,20 @@ export default function DuesPage() {
                 <tbody className="divide-y divide-divider">
                   {pageItems.map((r) => (
                     <tr key={r.id}>
-                      <td className="px-4 py-3 font-medium text-title">{r.fullName}</td>
+                      <td className="px-4 py-3 font-medium text-title">
+                        {r.fullName}
+                        {r.residentType === 'COMMERCIAL' && (
+                          <span className="ml-2 rounded-full bg-accent-soft px-2 py-0.5 text-xs font-medium text-title">
+                            Commercial
+                          </span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-body">{r.house ?? '—'}</td>
                       <td className="px-4 py-3 text-body">{r.phone}</td>
+                      <td className="px-4 py-3 text-body">
+                        {formatMonthKey(r.billingStart)}
+                        {!r.moveInMonth && <p className="text-xs text-amber-700">Move-in month not set</p>}
+                      </td>
                       <td className="px-4 py-3">
                         {r.duesBalance > 0 ? (
                           <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
@@ -278,7 +234,9 @@ export default function DuesPage() {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-body">{r.monthsPaid} of 12</td>
+                      <td className="px-4 py-3 text-body">
+                        {r.monthsPaid} of {r.monthsElapsed}
+                      </td>
                       {canRecordPayment && (
                         <td className="px-4 py-3 text-right">
                           <button
@@ -313,7 +271,7 @@ export default function DuesPage() {
           onClose={() => setRecordingFor(null)}
           onRecorded={() => {
             setRecordingFor(null);
-            void load(year);
+            void load();
           }}
         />
       )}
