@@ -10,6 +10,10 @@ COPY . .
 # not a Docker-internal hostname.
 ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+# Mixpanel project token — also inlined into the browser bundle at build time;
+# without it the admin site sends no analytics.
+ARG NEXT_PUBLIC_MIXPANEL_TOKEN
+ENV NEXT_PUBLIC_MIXPANEL_TOKEN=$NEXT_PUBLIC_MIXPANEL_TOKEN
 RUN npm run build
 
 ## Runtime stage — only the standalone server + its traced node_modules
