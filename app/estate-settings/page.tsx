@@ -19,6 +19,11 @@ interface PassRestriction {
   passRestrictionMonths: number | null;
 }
 
+interface GateAccessSettings {
+  gateAccessRestrictionAmount: number | null;
+  gateApiKey: string | null;
+}
+
 /**
  * Estate-level settings: the contact numbers shown on every resident's SOS
  * screen, the preloaded street list residents pick their address from, and
@@ -49,6 +54,16 @@ export default function EstateSettingsPage() {
   const [restrictionSaved, setRestrictionSaved] = useState('');
   const [savingRestriction, setSavingRestriction] = useState(false);
 
+  const [gateEnabled, setGateEnabled] = useState(false);
+  const [gateAmount, setGateAmount] = useState('0');
+  const [gateApiKey, setGateApiKey] = useState<string | null>(null);
+  const [gateLoaded, setGateLoaded] = useState(false);
+  const [gateError, setGateError] = useState('');
+  const [gateSaved, setGateSaved] = useState('');
+  const [savingGate, setSavingGate] = useState(false);
+  const [regeneratingKey, setRegeneratingKey] = useState(false);
+  const [showGateApiKey, setShowGateApiKey] = useState(false);
+
   const load = useCallback(async () => {
     try {
       const result = await apiFetch<EstateEmergencyContacts>('/estates/admin/emergency-contacts');
@@ -74,6 +89,16 @@ export default function EstateSettingsPage() {
       setRestrictionLoaded(true);
     } catch (err) {
       setRestrictionError(err instanceof ApiError ? err.message : 'Failed to load the pass restriction.');
+    }
+
+    try {
+      const result = await apiFetch<GateAccessSettings>('/estates/admin/gate-access');
+      setGateEnabled(result.gateAccessRestrictionAmount !== null);
+      setGateAmount(String(result.gateAccessRestrictionAmount ?? 0));
+      setGateApiKey(result.gateApiKey);
+      setGateLoaded(true);
+    } catch (err) {
+      setGateError(err instanceof ApiError ? err.message : 'Failed to load gate access settings.');
     }
   }, []);
 
@@ -146,6 +171,50 @@ export default function EstateSettingsPage() {
       setRestrictionError(err instanceof ApiError ? err.message : 'Failed to save the visitor pass policy.');
     } finally {
       setSavingRestriction(false);
+    }
+  }
+
+  async function handleSaveGateAccess(e: React.FormEvent) {
+    e.preventDefault();
+    setGateError('');
+    setGateSaved('');
+    const amount = Number(gateAmount);
+    if (gateEnabled && (!Number.isInteger(amount) || amount < 0)) {
+      setGateError('Enter a whole number of naira, 0 or more.');
+      return;
+    }
+    setSavingGate(true);
+    try {
+      await apiFetch('/estates/admin/gate-access', {
+        method: 'PATCH',
+        body: JSON.stringify({ gateAccessRestrictionAmount: gateEnabled ? amount : null }),
+      });
+      setGateSaved('Gate access policy saved.');
+    } catch (err) {
+      setGateError(err instanceof ApiError ? err.message : 'Failed to save the gate access policy.');
+    } finally {
+      setSavingGate(false);
+    }
+  }
+
+  async function handleRegenerateApiKey() {
+    if (gateApiKey && !window.confirm('Regenerating replaces the current key — any gate hardware already configured with it will stop working until updated. Continue?')) {
+      return;
+    }
+    setGateError('');
+    setGateSaved('');
+    setRegeneratingKey(true);
+    try {
+      const result = await apiFetch<{ gateApiKey: string }>('/estates/admin/gate-access/api-key/regenerate', {
+        method: 'POST',
+      });
+      setGateApiKey(result.gateApiKey);
+      setShowGateApiKey(true);
+      setGateSaved('New API key generated. Update your gate hardware with it.');
+    } catch (err) {
+      setGateError(err instanceof ApiError ? err.message : 'Failed to generate an API key.');
+    } finally {
+      setRegeneratingKey(false);
     }
   }
 
@@ -311,6 +380,99 @@ export default function EstateSettingsPage() {
           )}
           {!restrictionLoaded && restrictionError && (
             <p className="mt-6 rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">{restrictionError}</p>
+          )}
+
+          {gateLoaded && (
+            <form
+              onSubmit={handleSaveGateAccess}
+              className="mt-6 space-y-4 rounded-lg border border-divider bg-surface p-5"
+            >
+              <div>
+                <h3 className="text-sm font-medium text-text">Gate access</h3>
+                <p className="mt-0.5 text-xs text-body">
+                  Lets your vehicle gate hardware check a resident&apos;s outstanding dues (by their{' '}
+                  <span className="font-medium">RFID tag</span>, set on each resident&apos;s profile page) and deny
+                  entry automatically when they owe more than the limit below. The resident is notified the moment
+                  they&apos;re denied.
+                </p>
+              </div>
+
+              <label className="flex items-center gap-2 text-sm text-text">
+                <input
+                  type="checkbox"
+                  checked={gateEnabled}
+                  onChange={(e) => setGateEnabled(e.target.checked)}
+                />
+                Deny gate access to residents owing dues
+              </label>
+
+              {gateEnabled && (
+                <div>
+                  <label htmlFor="gate-amount" className="block text-sm font-medium text-text">
+                    Outstanding balance limit (₦)
+                  </label>
+                  <p className="mb-2 mt-0.5 text-xs text-body">
+                    A resident owing more than this is denied at the gate; owing up to this amount is still let in.
+                  </p>
+                  <input
+                    id="gate-amount"
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={gateAmount}
+                    onChange={(e) => setGateAmount(e.target.value)}
+                    className="w-40 rounded-md border border-divider px-3 py-2 text-sm text-title focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              )}
+
+              {gateError && <p className="text-sm text-danger">{gateError}</p>}
+              {gateSaved && <p className="text-sm text-green-700">{gateSaved}</p>}
+
+              <button
+                type="submit"
+                disabled={savingGate}
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+              >
+                {savingGate ? 'Saving…' : 'Save policy'}
+              </button>
+
+              <div className="border-t border-divider pt-4">
+                <p className="text-sm font-medium text-text">Gate hardware API key</p>
+                <p className="mb-2 mt-0.5 text-xs text-body">
+                  Give this to whoever configures your gate hardware — they send it as the{' '}
+                  <code className="rounded bg-divider/60 px-1 py-0.5 text-xs">X-Api-Key</code> header when calling{' '}
+                  <code className="rounded bg-divider/60 px-1 py-0.5 text-xs">POST /gate-access/check</code>.
+                </p>
+                {gateApiKey ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <code className="rounded-md border border-divider bg-divider/30 px-3 py-1.5 text-xs text-title">
+                      {showGateApiKey ? gateApiKey : '•'.repeat(24)}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => setShowGateApiKey((v) => !v)}
+                      className="rounded-md border border-divider px-3 py-1.5 text-xs font-medium text-body hover:bg-divider/40"
+                    >
+                      {showGateApiKey ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-xs text-body">No key generated yet.</p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleRegenerateApiKey}
+                  disabled={regeneratingKey}
+                  className="mt-3 rounded-md border border-divider px-4 py-1.5 text-sm font-medium text-body hover:bg-divider/40 disabled:opacity-50"
+                >
+                  {regeneratingKey ? 'Generating…' : gateApiKey ? 'Regenerate key' : 'Generate key'}
+                </button>
+              </div>
+            </form>
+          )}
+          {!gateLoaded && gateError && (
+            <p className="mt-6 rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">{gateError}</p>
           )}
 
           <TokenChargingCard />

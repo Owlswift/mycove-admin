@@ -21,6 +21,8 @@ export interface AdminUser {
   emergencyContactName: string | null;
   emergencyContactPhone: string | null;
   vehiclePlates: string[];
+  /** RFID tag/card ID the estate's vehicle gate hardware reads — null until an admin assigns one. */
+  rfidTag?: string | null;
   mustResetPassword: boolean;
   active: boolean;
   createdAt: string;

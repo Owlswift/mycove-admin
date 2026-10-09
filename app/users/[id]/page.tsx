@@ -265,6 +265,91 @@ function BirthdayCard({
   );
 }
 
+/**
+ * The RFID tag/card ID the estate's vehicle gate hardware reads to identify
+ * this resident. The gate calls back to MyCove with the tag on every scan
+ * (see the estate's Gate Access settings) and allows or denies entry based
+ * on their outstanding dues balance.
+ */
+function RfidTagCard({
+  profile,
+  onSaved,
+}: {
+  profile: AdminUser;
+  onSaved: (rfidTag: string | null) => void;
+}) {
+  const [tag, setTag] = useState(profile.rfidTag ?? '');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function save(clear = false) {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<{ rfidTag: string | null }>(`/admin/users/${profile.id}/rfid-tag`, {
+        method: 'PATCH',
+        body: JSON.stringify({ rfidTag: clear ? null : tag.trim() }),
+      });
+      onSaved(result.rfidTag);
+      setTag(result.rfidTag ?? '');
+      setMessage(result.rfidTag ? `Saved. Tag "${result.rfidTag}" is linked to this resident.` : 'Tag cleared.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save the RFID tag.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-divider bg-surface p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-body">Gate RFID tag</p>
+      <p className="mt-1 text-sm text-body">
+        The tag/card ID printed on or programmed into this resident&apos;s vehicle gate pass. Scanning it at the gate
+        checks their dues balance against the estate&apos;s{' '}
+        <Link href="/estate-settings" className="text-accent hover:text-accent-hover">
+          gate access policy
+        </Link>
+        .
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={tag}
+          onChange={(e) => {
+            setTag(e.target.value);
+            setMessage('');
+          }}
+          placeholder="e.g. A1B2C3D4"
+          aria-label="RFID tag"
+          className="w-48 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={() => save(false)}
+          disabled={saving || !tag.trim() || tag.trim() === (profile.rfidTag ?? '')}
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save tag'}
+        </button>
+        {profile.rfidTag && (
+          <button
+            type="button"
+            onClick={() => save(true)}
+            disabled={saving}
+            className="rounded-md border border-divider px-4 py-1.5 text-sm font-medium text-body hover:bg-divider/40 disabled:opacity-50"
+          >
+            Clear tag
+          </button>
+        )}
+      </div>
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
+    </div>
+  );
+}
+
 const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
 /** What an admin may hand out — the chairman role is the chairman's alone. */
 const ADMIN_GRANTABLE: Role[] = ['FINANCE_SECRETARY', 'PROJECT_ADMIN'];
@@ -448,6 +533,13 @@ export default function UserDetailPage() {
                 <BirthdayCard
                   profile={profile}
                   onSaved={(birthMonth, birthDay) => setProfile({ ...profile, birthMonth, birthDay })}
+                />
+              )}
+
+              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+                <RfidTagCard
+                  profile={profile}
+                  onSaved={(rfidTag) => setProfile({ ...profile, rfidTag })}
                 />
               )}
 
