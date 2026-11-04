@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api';
-import { parseCsv } from '@/lib/csv-parse';
+import { parseSpreadsheet } from '@/lib/sheet-parse';
 import { downloadCsv } from '@/lib/csv-export';
 import { formatMonthKey } from '@/lib/months';
 import { DuesImportPreview, DuesImportRow, RESIDENT_TYPE_LABELS } from '@/lib/types';
@@ -34,8 +34,7 @@ function formatMoney(amount: number): string {
 }
 
 /** Turns the spreadsheet into rows, finding each column by its header so their order doesn't matter. */
-function readUpload(text: string): { rows: UploadRow[] } | { error: string } {
-  const table = parseCsv(text);
+function readUpload(table: string[][]): { rows: UploadRow[] } | { error: string } {
   if (table.length < 2) return { error: 'That file has no data rows. Use the template to see the layout.' };
 
   const headers = table[0].map((h) => h.trim().toLowerCase());
@@ -161,7 +160,15 @@ export default function ImportDuesPage() {
     setAllowRepeats(false);
     setFileName(file.name);
 
-    const parsed = readUpload(await file.text());
+    let table: string[][];
+    try {
+      table = await parseSpreadsheet(file);
+    } catch {
+      setUploadRows([]);
+      setError("Couldn't read that file. Make sure it's a CSV or Excel (.xlsx) file.");
+      return;
+    }
+    const parsed = readUpload(table);
     if ('error' in parsed) {
       setUploadRows([]);
       setError(parsed.error);
@@ -235,9 +242,15 @@ export default function ImportDuesPage() {
                 htmlFor="dues-csv"
                 className="cursor-pointer rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover"
               >
-                Choose CSV file
+                Choose CSV or Excel file
               </label>
-              <input id="dues-csv" type="file" accept=".csv,text/csv" onChange={handleFile} className="sr-only" />
+              <input
+                id="dues-csv"
+                type="file"
+                accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                onChange={handleFile}
+                className="sr-only"
+              />
               {fileName && <span className="text-sm text-body">{fileName}</span>}
             </div>
           </div>

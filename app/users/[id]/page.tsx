@@ -350,9 +350,9 @@ function RfidTagCard({
   );
 }
 
-const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
+const GRANTABLE_STAFF_ROLES: Role[] = ['CHAIRMAN', 'ADMIN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
 /** What an admin may hand out — the chairman role is the chairman's alone. */
-const ADMIN_GRANTABLE: Role[] = ['FINANCE_SECRETARY', 'PROJECT_ADMIN'];
+const ADMIN_GRANTABLE: Role[] = ['ADMIN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN'];
 
 /**
  * Lets an admin also make a resident staff — e.g. the chairman. It's the
@@ -485,7 +485,7 @@ export default function UserDetailPage() {
         <div className="mx-auto max-w-4xl">
           <Link href="/users" className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent-hover">
             <ArrowLeft size={15} strokeWidth={2} />
-            Back to users
+            Back to residents
           </Link>
 
           {error && <p className="mt-6 text-sm text-danger">{error}</p>}

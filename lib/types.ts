@@ -224,6 +224,22 @@ export interface DuesImportPreview {
   summary: { total: number; ok: number; duplicates: number; errors: number; noRates: boolean };
 }
 
+export interface ResidentImportRow {
+  line: number;
+  status: ImportRowStatus;
+  message: string | null;
+  phone: string;
+  fullName: string;
+  house: string | null;
+  residentType: ResidentType | null;
+  moveInMonth: string | null;
+}
+
+export interface ResidentImportPreview {
+  results: ResidentImportRow[];
+  summary: { ok: number; duplicates: number; errors: number };
+}
+
 export interface LevyResidentStatus {
   id: string;
   fullName: string;

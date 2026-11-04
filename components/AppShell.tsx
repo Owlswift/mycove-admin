@@ -42,7 +42,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Residents & Access',
     items: [
-      { href: '/users', label: 'Users', icon: UsersIcon, roles: ['ADMIN', 'CHAIRMAN'] },
+      { href: '/users', label: 'Residents', icon: UsersIcon, roles: ['ADMIN', 'CHAIRMAN'] },
       { href: '/household-invites', label: 'Household Invites', icon: UserPlus, roles: ['ADMIN'] },
       { href: '/access-log', label: 'Access Log', icon: ClipboardList, roles: ['ADMIN', 'CHAIRMAN'] },
     ],

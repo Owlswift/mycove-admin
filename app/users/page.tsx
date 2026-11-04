@@ -136,18 +136,26 @@ export default function UsersPage() {
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-title">Users</h2>
+              <h2 className="text-xl font-semibold text-title">Residents</h2>
               <p className="mt-1 text-sm text-body">Manage resident, guard, and staff accounts.</p>
             </div>
             <div className="flex items-center gap-2">
               <SearchInput value={search} onChange={setSearch} placeholder="Search name, phone, house…" />
               {user.role === 'ADMIN' && (
-                <button
-                  onClick={() => setShowCreateModal(true)}
-                  className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
-                >
-                  + New account
-                </button>
+                <>
+                  <Link
+                    href="/users/import"
+                    className="rounded-md border border-divider px-4 py-2 text-sm font-semibold text-text hover:bg-accent-soft"
+                  >
+                    Bulk import
+                  </Link>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover"
+                  >
+                    + New account
+                  </button>
+                </>
               )}
             </div>
           </div>
