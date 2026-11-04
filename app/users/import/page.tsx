@@ -44,7 +44,7 @@ function readUpload(table: string[][]): { rows: UploadRow[] } | { error: string 
     moveInMonth: indexOf('moveInMonth'),
   };
 
-  const missing = (['phone', 'fullName', 'moveInMonth'] as const).filter((f) => cols[f] === -1);
+  const missing = (['phone', 'fullName', 'residentType'] as const).filter((f) => cols[f] === -1);
   if (missing.length > 0) {
     return { error: `The file is missing a "${missing.join('", "')}" column. Use the template to see the layout.` };
   }
@@ -57,8 +57,8 @@ function readUpload(table: string[][]): { rows: UploadRow[] } | { error: string 
       phone: (r[cols.phone] ?? '').trim(),
       fullName: (r[cols.fullName] ?? '').trim(),
       house: cols.house === -1 ? '' : (r[cols.house] ?? '').trim(),
-      residentType: cols.residentType === -1 ? '' : (r[cols.residentType] ?? '').trim(),
-      moveInMonth: (r[cols.moveInMonth] ?? '').trim(),
+      residentType: (r[cols.residentType] ?? '').trim(),
+      moveInMonth: cols.moveInMonth === -1 ? '' : (r[cols.moveInMonth] ?? '').trim(),
     })),
   };
 }
@@ -115,7 +115,7 @@ export default function ImportResidentsPage() {
           FullName: 'Tunde Adeyemi Stores',
           House: '4 Ocean Drive',
           ResidentType: 'Commercial',
-          MoveInMonth: '2023-11',
+          MoveInMonth: '',
         },
       ],
     );
@@ -211,14 +211,14 @@ export default function ImportResidentsPage() {
                 <b>Full Name</b> — used to show their name and to set their default password.
               </li>
               <li>
-                <b>Move-in Month</b> — when they moved in, e.g. <code>2024-03</code>. Dues billing starts from here.
+                <b>Resident Type</b> — <code>Regular</code> or <code>Commercial</code>.
               </li>
               <li>
                 <b>House</b> — optional, their unit/address.
               </li>
               <li>
-                <b>Resident Type</b> — optional, <code>Regular</code> or <code>Commercial</code> (defaults to
-                Regular).
+                <b>Move-in Month</b> — optional, e.g. <code>2024-03</code>. Dues billing starts from here if given,
+                otherwise from today.
               </li>
             </ul>
             <div className="mt-4 flex flex-wrap items-center gap-3">
