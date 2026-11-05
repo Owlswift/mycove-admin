@@ -1,9 +1,8 @@
 # MyCove Admin
 
-A small internal web dashboard for estate staff to register residents and
-security guards on [MyCove](../mycove) — there is no
-self-registration in the mobile app, so an admin account has to create
-every resident/guard account here first.
+Web dashboard for estate staff to run a residential estate on MyCove: register residents and guards, manage dues and levies, publish announcements and polls, and review the visitor access log. Built with Next.js, React, TypeScript and Tailwind CSS. There is no self-registration in the mobile app, so an admin account has to create every resident and guard account here first.
+
+**Stack:** Next.js (App Router), React, TypeScript, Tailwind CSS, Mixpanel, Docker. It talks to the MyCove API (NestJS, Prisma, PostgreSQL).
 
 ## What it does
 
@@ -33,4 +32,4 @@ Runs on **http://localhost:3001** (not 3000 — that's the API). Set
 `NEXT_PUBLIC_API_BASE_URL` in `.env.local` if the API isn't on
 `http://localhost:3000/api` (see `.env.example`).
 
-Demo admin login: `08000000001` / `admin123`.
+The admin account is created by the seed script in the MyCove API.
