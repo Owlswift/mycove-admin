@@ -35,6 +35,153 @@ function formatDate(iso: string): string {
 }
 
 /**
+ * Fixes a typo'd name, phone, address, email, or emergency contact after
+ * the account already exists — most commonly after a bulk import or a
+ * mistyped "Add account".
+ */
+function EditDetailsCard({
+  profile,
+  onSaved,
+}: {
+  profile: AdminUser;
+  onSaved: (details: Partial<AdminUser>) => void;
+}) {
+  const [fullName, setFullName] = useState(profile.fullName);
+  const [phone, setPhone] = useState(profile.phone);
+  const [house, setHouse] = useState(profile.house ?? '');
+  const [email, setEmail] = useState(profile.email ?? '');
+  const [emergencyContactName, setEmergencyContactName] = useState(profile.emergencyContactName ?? '');
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState(profile.emergencyContactPhone ?? '');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const dirty =
+    fullName.trim() !== profile.fullName ||
+    phone.trim() !== profile.phone ||
+    house.trim() !== (profile.house ?? '') ||
+    email.trim() !== (profile.email ?? '') ||
+    emergencyContactName.trim() !== (profile.emergencyContactName ?? '') ||
+    emergencyContactPhone.trim() !== (profile.emergencyContactPhone ?? '');
+
+  async function save() {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<AdminUser>(`/admin/users/${profile.id}/details`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          house: house.trim(),
+          email: email.trim() || undefined,
+          emergencyContactName: emergencyContactName.trim(),
+          emergencyContactPhone: emergencyContactPhone.trim(),
+        }),
+      });
+      onSaved(result);
+      setMessage('Saved.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save these details.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-divider bg-surface p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-body">Edit details</p>
+      <p className="mt-1 text-sm text-body">Fix a typo in their name, phone, address, email, or emergency contact.</p>
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <label className="flex flex-col gap-1 text-sm text-text">
+          Full name
+          <input
+            type="text"
+            value={fullName}
+            onChange={(e) => {
+              setFullName(e.target.value);
+              setMessage('');
+            }}
+            className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-text">
+          Phone
+          <input
+            type="text"
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              setMessage('');
+            }}
+            className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-text">
+          House / address
+          <input
+            type="text"
+            value={house}
+            onChange={(e) => {
+              setHouse(e.target.value);
+              setMessage('');
+            }}
+            className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-text">
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setMessage('');
+            }}
+            className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-text">
+          Emergency contact name
+          <input
+            type="text"
+            value={emergencyContactName}
+            onChange={(e) => {
+              setEmergencyContactName(e.target.value);
+              setMessage('');
+            }}
+            className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-text">
+          Emergency contact phone
+          <input
+            type="text"
+            value={emergencyContactPhone}
+            onChange={(e) => {
+              setEmergencyContactPhone(e.target.value);
+              setMessage('');
+            }}
+            className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+          />
+        </label>
+      </div>
+      <button
+        type="button"
+        onClick={save}
+        disabled={saving || !dirty || !fullName.trim() || !phone.trim()}
+        className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+      >
+        {saving ? 'Saving…' : 'Save details'}
+      </button>
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
+    </div>
+  );
+}
+
+/**
  * Regular or commercial — commercial residents pay their own dues rate. The
  * type applies to everything they're billed, past months included, so
  * changing it moves their balance.
@@ -514,6 +661,17 @@ export default function UserDetailPage() {
                 </div>
                 <p className="text-xs text-body">Member since {formatDate(profile.createdAt)}</p>
               </div>
+
+              {(() => {
+                const targetIsStaff =
+                  (profile.role !== 'RESIDENT' && profile.role !== 'GUARD') || (profile.staffRoles?.length ?? 0) > 0;
+                const canEditDetails = currentUser.role === 'CHAIRMAN' ? targetIsStaff : !targetIsStaff;
+                return (
+                  canEditDetails && (
+                    <EditDetailsCard profile={profile} onSaved={(details) => setProfile({ ...profile, ...details })} />
+                  )
+                );
+              })()}
 
               {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
                 <ResidentTypeCard
