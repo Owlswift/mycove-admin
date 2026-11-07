@@ -34,7 +34,7 @@ export default function SpotlightsPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN') void load();
+    if (user?.role === 'ADMIN' || user?.role === 'CHAIRMAN') void load();
   }, [user, load]);
 
   async function handleToggle(id: string) {
@@ -80,7 +80,7 @@ export default function SpotlightsPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-start justify-between gap-3">

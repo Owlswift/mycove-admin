@@ -9,12 +9,10 @@ import {
   Wallet,
   CalendarDays,
   Megaphone,
-  Receipt,
-  ClipboardList,
   type LucideIcon,
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
-import { AccessLogEntry, AdminUser, Complaint, Poll, TreasurySummary, Meeting, Announcement } from '@/lib/types';
+import { AdminUser, Complaint, Poll, TreasurySummary, Meeting, Announcement } from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import AppShell from '@/components/AppShell';
 
@@ -131,81 +129,6 @@ function AdminDashboard({ user }: { user: AdminUser }) {
   );
 }
 
-/** The chairman's read-only view of the estate — built only from data his
- * role can fetch (dues, complaints, gate activity, treasury, announcements),
- * so every number here is real rather than a blank from a forbidden call. */
-function ChairmanDashboard({ user }: { user: AdminUser }) {
-  const [complaints, setComplaints] = useState<Complaint[] | null>(null);
-  const [treasury, setTreasury] = useState<TreasurySummary | null>(null);
-  const [dues, setDues] = useState<{
-    totals: { expected: number; collected: number; outstanding: number };
-    residents: { duesBalance: number }[];
-  } | null>(null);
-  const [gate, setGate] = useState<AccessLogEntry[] | null>(null);
-  const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
-
-  useEffect(() => {
-    void apiFetch<Complaint[]>('/complaints/admin/all').then(setComplaints).catch(() => setComplaints([]));
-    void apiFetch<TreasurySummary>('/finance/summary').then(setTreasury).catch(() => setTreasury(null));
-    void apiFetch<NonNullable<typeof dues>>('/finance/dues').then(setDues).catch(() => setDues(null));
-    void apiFetch<AccessLogEntry[]>('/access-log').then(setGate).catch(() => setGate([]));
-    void apiFetch<Announcement[]>('/announcements').then(setAnnouncements).catch(() => setAnnouncements([]));
-  }, []);
-
-  const openComplaints = complaints?.filter((c) => c.status !== 'RESOLVED').length ?? 0;
-  const owing = dues?.residents.filter((r) => r.duesBalance > 0).length ?? 0;
-  const inside = gate?.filter((e) => e.exitAt === null).length ?? 0;
-
-  return (
-    <div className="px-6 py-8 md:px-10">
-      <div className="mx-auto max-w-6xl">
-        <h2 className="text-2xl font-semibold text-title">Estate Overview</h2>
-        <p className="mt-1 text-sm text-body">
-          Welcome, {user.fullName.split(' ')[0]} — how things stand at {user.estateName ?? 'your estate'}.
-        </p>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            href="/dues"
-            icon={Receipt}
-            label="Dues collected"
-            value={dues === null ? '…' : formatNaira(dues.totals.collected)}
-            hint={dues ? `${formatNaira(dues.totals.outstanding)} outstanding · ${owing} residents owing` : undefined}
-          />
-          <StatCard
-            href="/finance"
-            icon={Wallet}
-            label="Treasury balance"
-            value={treasury === null ? '…' : formatNaira(treasury.treasuryBalance)}
-            hint={treasury ? `${formatNaira(treasury.totalCollected)} collected to date` : undefined}
-          />
-          <StatCard
-            href="/complaints"
-            icon={MessageSquareWarning}
-            label="Open complaints"
-            value={complaints === null ? '…' : String(openComplaints)}
-            hint={complaints ? `${complaints.length} total` : undefined}
-          />
-          <StatCard
-            href="/access-log"
-            icon={ClipboardList}
-            label="Visitors inside now"
-            value={gate === null ? '…' : String(inside)}
-            hint={gate ? `${gate.length} gate entries logged` : undefined}
-          />
-          <StatCard
-            href="/announcements"
-            icon={Megaphone}
-            label="Announcements"
-            value={announcements === null ? '…' : String(announcements.length)}
-            hint={announcements?.[0]?.title}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /** Finance Secretary / Project Admin see far fewer pages — a full stat grid
  * would mostly point at pages they can't open, so they get a lighter,
  * purely-navigational welcome instead. */
@@ -249,10 +172,8 @@ export default function DashboardPage() {
 
   return (
     <AppShell user={user} allow={['ADMIN', 'FINANCE_SECRETARY', 'PROJECT_ADMIN', 'CHAIRMAN']}>
-      {user.role === 'ADMIN' ? (
+      {user.role === 'ADMIN' || user.role === 'CHAIRMAN' ? (
         <AdminDashboard user={user} />
-      ) : user.role === 'CHAIRMAN' ? (
-        <ChairmanDashboard user={user} />
       ) : (
         <LimitedDashboard user={user} />
       )}

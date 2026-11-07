@@ -52,7 +52,7 @@ export default function DuesPage() {
   // reconciliation task, not a rate-setting one — Admin needs it too since
   // automated account/payment setup can lag behind a resident actually
   // paying, unlike changing the dues rates, which stays Finance-only.
-  const canRecordPayment = user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY';
+  const canRecordPayment = user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY' || user?.role === 'CHAIRMAN';
 
   const load = useCallback(async () => {
     try {

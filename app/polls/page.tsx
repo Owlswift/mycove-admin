@@ -30,7 +30,7 @@ export default function PollsPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN') void loadPolls();
+    if (user?.role === 'ADMIN' || user?.role === 'CHAIRMAN') void loadPolls();
   }, [user, loadPolls]);
 
   const filtered = useMemo(() => {
@@ -52,7 +52,7 @@ export default function PollsPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-center justify-between gap-3">

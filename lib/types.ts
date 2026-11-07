@@ -30,6 +30,8 @@ export interface AdminUser {
   createdAt: string;
   estateName?: string;
   estateAddress?: string;
+  /** The code residents enter on first app launch to scope which estate's data they see. */
+  estateCode?: string;
 }
 
 export type DuesEntryType = 'CHARGE' | 'PAYMENT';

@@ -30,8 +30,8 @@ export default function ProjectsPage() {
     }
   }, []);
 
-  const canManage = user?.role === 'ADMIN';
-  const canCreate = user?.role === 'ADMIN' || user?.role === 'PROJECT_ADMIN';
+  const canManage = user?.role === 'ADMIN' || user?.role === 'CHAIRMAN';
+  const canCreate = user?.role === 'ADMIN' || user?.role === 'PROJECT_ADMIN' || user?.role === 'CHAIRMAN';
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect

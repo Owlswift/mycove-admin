@@ -104,7 +104,7 @@ export default function EstateSettingsPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN') void load();
+    if (user?.role === 'ADMIN' || user?.role === 'CHAIRMAN') void load();
   }, [user, load]);
 
   async function handleSave(e: React.FormEvent) {
@@ -223,7 +223,7 @@ export default function EstateSettingsPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-3xl">
           <div>
@@ -233,6 +233,19 @@ export default function EstateSettingsPage() {
               visitor pass policy.
             </p>
           </div>
+
+          {user.estateCode && (
+            <div className="mt-6 rounded-lg border border-divider bg-surface p-5">
+              <h3 className="text-sm font-medium text-text">Estate access code</h3>
+              <p className="mt-0.5 text-xs text-body">
+                New residents enter this when they first open the app, before they can log in. Share it
+                with anyone joining the estate.
+              </p>
+              <code className="mt-2 inline-block rounded-md border border-divider bg-divider/30 px-3 py-1.5 text-sm font-semibold tracking-wide text-title">
+                {user.estateCode}
+              </code>
+            </div>
+          )}
 
           {loadError && (
             <p className="mt-6 rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">{loadError}</p>

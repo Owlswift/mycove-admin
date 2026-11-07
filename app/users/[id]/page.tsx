@@ -738,7 +738,8 @@ export default function UserDetailPage() {
               {(() => {
                 const targetIsStaff =
                   (profile.role !== 'RESIDENT' && profile.role !== 'GUARD') || (profile.staffRoles?.length ?? 0) > 0;
-                const canEditDetails = currentUser.role === 'CHAIRMAN' ? targetIsStaff : !targetIsStaff;
+                const canEditDetails =
+                  currentUser.role === 'CHAIRMAN' ? true : currentUser.role === 'ADMIN' && !targetIsStaff;
                 return (
                   canEditDetails && (
                     <EditDetailsCard profile={profile} onSaved={(details) => setProfile({ ...profile, ...details })} />
@@ -746,35 +747,35 @@ export default function UserDetailPage() {
                 );
               })()}
 
-              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+              {profile.role === 'RESIDENT' && (currentUser.role === 'ADMIN' || currentUser.role === 'CHAIRMAN') && (
                 <ResidentTypeCard
                   profile={profile}
                   onSaved={(residentType) => setProfile({ ...profile, residentType })}
                 />
               )}
 
-              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+              {profile.role === 'RESIDENT' && (currentUser.role === 'ADMIN' || currentUser.role === 'CHAIRMAN') && (
                 <OccupancyTypeCard
                   profile={profile}
                   onSaved={(occupancyType) => setProfile({ ...profile, occupancyType })}
                 />
               )}
 
-              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+              {profile.role === 'RESIDENT' && (currentUser.role === 'ADMIN' || currentUser.role === 'CHAIRMAN') && (
                 <MoveInCard
                   profile={profile}
                   onSaved={(moveInMonth) => setProfile({ ...profile, moveInMonth })}
                 />
               )}
 
-              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+              {profile.role === 'RESIDENT' && (currentUser.role === 'ADMIN' || currentUser.role === 'CHAIRMAN') && (
                 <BirthdayCard
                   profile={profile}
                   onSaved={(birthMonth, birthDay) => setProfile({ ...profile, birthMonth, birthDay })}
                 />
               )}
 
-              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+              {profile.role === 'RESIDENT' && (currentUser.role === 'ADMIN' || currentUser.role === 'CHAIRMAN') && (
                 <RfidTagCard
                   profile={profile}
                   onSaved={(rfidTag) => setProfile({ ...profile, rfidTag })}

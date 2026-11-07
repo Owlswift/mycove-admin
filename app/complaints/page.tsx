@@ -142,8 +142,7 @@ export default function ComplaintsPage() {
                       </div>
                     </div>
                   </div>
-                  {/* The chairman can see every complaint but not change its status. */}
-                  {user.role === 'ADMIN' && (
+                  {(user.role === 'ADMIN' || user.role === 'CHAIRMAN') && (
                   <div className="mt-3 flex gap-2">
                     {c.status !== 'IN_REVIEW' && (
                       <button

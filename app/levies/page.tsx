@@ -66,7 +66,7 @@ export default function LeviesPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY') void load(year);
+    if (user?.role === 'ADMIN' || user?.role === 'FINANCE_SECRETARY' || user?.role === 'CHAIRMAN') void load(year);
   }, [user, year, load]);
 
   async function handleCreate(e: React.FormEvent) {
@@ -145,7 +145,7 @@ export default function LeviesPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN', 'FINANCE_SECRETARY']}>
+    <AppShell user={user} allow={['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-4xl">
           <div className="flex items-center justify-between">

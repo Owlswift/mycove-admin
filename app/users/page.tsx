@@ -189,7 +189,7 @@ export default function UsersPage() {
             </div>
             <div className="flex items-center gap-2">
               <SearchInput value={search} onChange={setSearch} placeholder="Search name, phone, house…" />
-              {user.role === 'ADMIN' && (
+              {(user.role === 'ADMIN' || user.role === 'CHAIRMAN') && (
                 <>
                   <Link
                     href="/users/import"
@@ -250,7 +250,7 @@ export default function UsersPage() {
 
             {error && <p className="text-sm text-danger">{error}</p>}
 
-            {tab === 'residents' && user.role === 'ADMIN' && missingMoveIn.length > 0 && (
+            {tab === 'residents' && (user.role === 'ADMIN' || user.role === 'CHAIRMAN') && missingMoveIn.length > 0 && (
               <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 <p className="font-medium">
                   {missingMoveIn.length} resident{missingMoveIn.length === 1 ? ' has' : 's have'} no move-in month
@@ -267,7 +267,7 @@ export default function UsersPage() {
               </div>
             )}
 
-            {tab === 'residents' && user.role === 'ADMIN' && missingOccupancy.length > 0 && (
+            {tab === 'residents' && (user.role === 'ADMIN' || user.role === 'CHAIRMAN') && missingOccupancy.length > 0 && (
               <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 <p className="font-medium">
                   {missingOccupancy.length} resident{missingOccupancy.length === 1 ? ' has' : 's have'} no
@@ -491,14 +491,16 @@ function staffRolesOf(u: AdminUser): Role[] {
 }
 
 /**
- * The admin looks after residents and guards; staff accounts are the
- * chairman's. Nobody manages their own here — password changes go through
- * "Change password".
+ * The admin manages residents and guards; staff accounts are the
+ * chairman's own. The chairman has every permission the admin has on top
+ * of that, so they can manage everyone. Nobody manages their own here —
+ * password changes go through "Change password".
  */
 function canManage(viewer: Role, target: AdminUser, viewerId: string): boolean {
   if (target.id === viewerId) return false;
+  if (viewer === 'CHAIRMAN') return true;
   const targetIsStaff = staffRolesOf(target).length > 0;
-  return viewer === 'CHAIRMAN' ? targetIsStaff : !targetIsStaff;
+  return viewer === 'ADMIN' && !targetIsStaff;
 }
 
 function UserSection({
@@ -574,7 +576,7 @@ function UserSection({
                   <td className="px-4 py-3">
                     {user.occupancyType ? (
                       <span className="text-body">{OCCUPANCY_TYPE_LABELS[user.occupancyType]}</span>
-                    ) : viewerRole === 'ADMIN' ? (
+                    ) : viewerRole === 'ADMIN' || viewerRole === 'CHAIRMAN' ? (
                       <select
                         value=""
                         onChange={(e) => onSetOccupancyType?.(user, e.target.value as OccupancyType)}

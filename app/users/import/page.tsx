@@ -201,7 +201,7 @@ export default function ImportResidentsPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-5xl">
           <Link href="/users" className="inline-flex items-center gap-1 text-sm text-body hover:text-title">

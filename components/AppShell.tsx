@@ -43,7 +43,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Residents & Access',
     items: [
       { href: '/users', label: 'Residents', icon: UsersIcon, roles: ['ADMIN', 'CHAIRMAN'] },
-      { href: '/household-invites', label: 'Household Invites', icon: UserPlus, roles: ['ADMIN'] },
+      { href: '/household-invites', label: 'Household Invites', icon: UserPlus, roles: ['ADMIN', 'CHAIRMAN'] },
       { href: '/access-log', label: 'Access Log', icon: ClipboardList, roles: ['ADMIN', 'CHAIRMAN'] },
     ],
   },
@@ -51,12 +51,12 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Community',
     items: [
       { href: '/announcements', label: 'Announcements', icon: Megaphone, roles: ['ADMIN', 'CHAIRMAN'] },
-      { href: '/meetings', label: 'Meetings', icon: CalendarDays, roles: ['ADMIN'] },
-      { href: '/rules', label: 'Rules', icon: BookOpen, roles: ['ADMIN'] },
+      { href: '/meetings', label: 'Meetings', icon: CalendarDays, roles: ['ADMIN', 'CHAIRMAN'] },
+      { href: '/rules', label: 'Rules', icon: BookOpen, roles: ['ADMIN', 'CHAIRMAN'] },
       { href: '/complaints', label: 'Complaints', icon: MessageSquareWarning, roles: ['ADMIN', 'CHAIRMAN'] },
-      { href: '/polls', label: 'Polls', icon: Vote, roles: ['ADMIN'] },
+      { href: '/polls', label: 'Polls', icon: Vote, roles: ['ADMIN', 'CHAIRMAN'] },
       { href: '/projects', label: 'Projects', icon: Building2, roles: ['ADMIN', 'PROJECT_ADMIN', 'CHAIRMAN'] },
-      { href: '/spotlights', label: 'Spotlights', icon: Sparkles, roles: ['ADMIN'] },
+      { href: '/spotlights', label: 'Spotlights', icon: Sparkles, roles: ['ADMIN', 'CHAIRMAN'] },
     ],
   },
   {
@@ -64,13 +64,13 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: '/finance', label: 'Finance', icon: Wallet, roles: ['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN'] },
       { href: '/dues', label: 'Dues', icon: Receipt, roles: ['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN'] },
-      { href: '/levies', label: 'Levies', icon: CreditCard, roles: ['ADMIN', 'FINANCE_SECRETARY'] },
+      { href: '/levies', label: 'Levies', icon: CreditCard, roles: ['ADMIN', 'FINANCE_SECRETARY', 'CHAIRMAN'] },
       { href: '/invoices', label: 'Invoices', icon: FileText, roles: ['PROJECT_ADMIN'] },
     ],
   },
   {
     label: 'Settings',
-    items: [{ href: '/estate-settings', label: 'Estate Settings', icon: Settings, roles: ['ADMIN'] }],
+    items: [{ href: '/estate-settings', label: 'Estate Settings', icon: Settings, roles: ['ADMIN', 'CHAIRMAN'] }],
   },
 ];
 

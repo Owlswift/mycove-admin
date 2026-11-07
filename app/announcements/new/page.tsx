@@ -38,7 +38,7 @@ export default function NewAnnouncementPage() {
   }
 
   return (
-    <AppShell user={user} allow={['ADMIN']}>
+    <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
         <div className="mx-auto max-w-2xl">
           <Link href="/announcements" className="text-sm font-medium text-accent hover:text-accent-hover">
