@@ -13,6 +13,8 @@ import {
   PledgeEntry,
   RESIDENT_TYPE_LABELS,
   ResidentType,
+  OCCUPANCY_TYPE_LABELS,
+  OccupancyType,
   Role,
 } from '@/lib/types';
 import { formatMonthKey } from '@/lib/months';
@@ -243,6 +245,77 @@ function ResidentTypeCard({
           className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
         >
           {saving ? 'Saving…' : 'Save type'}
+        </button>
+      </div>
+      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {message && <p className="mt-3 text-sm text-green-700">{message}</p>}
+    </div>
+  );
+}
+
+/**
+ * Owns their unit (landlord) or rents it (tenant) — distinct from resident
+ * type, which is only about the dues rate.
+ */
+function OccupancyTypeCard({
+  profile,
+  onSaved,
+}: {
+  profile: AdminUser;
+  onSaved: (type: OccupancyType) => void;
+}) {
+  const [type, setType] = useState<OccupancyType>(profile.occupancyType ?? 'TENANT');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  async function save() {
+    setSaving(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await apiFetch<{ occupancyType: OccupancyType }>(`/admin/users/${profile.id}/occupancy-type`, {
+        method: 'PATCH',
+        body: JSON.stringify({ occupancyType: type }),
+      });
+      onSaved(result.occupancyType);
+      setMessage(`Saved. ${profile.fullName.split(' ')[0]} is now listed as a ${OCCUPANCY_TYPE_LABELS[result.occupancyType].toLowerCase()}.`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save the occupancy type.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-divider bg-surface p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-body">Tenant or landlord</p>
+      <p className="mt-1 text-sm text-body">
+        Whether this resident owns their unit or rents it. Shown as separate lists on the Residents page.
+        {!profile.occupancyType && (
+          <span className="font-medium text-amber-700"> Not recorded yet.</span>
+        )}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <select
+          value={type}
+          onChange={(e) => {
+            setType(e.target.value as OccupancyType);
+            setMessage('');
+          }}
+          aria-label="Tenant or landlord"
+          className="rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+        >
+          <option value="TENANT">Tenant</option>
+          <option value="LANDLORD">Landlord</option>
+        </select>
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving || (!!profile.occupancyType && type === profile.occupancyType)}
+          className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save'}
         </button>
       </div>
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
@@ -677,6 +750,13 @@ export default function UserDetailPage() {
                 <ResidentTypeCard
                   profile={profile}
                   onSaved={(residentType) => setProfile({ ...profile, residentType })}
+                />
+              )}
+
+              {profile.role === 'RESIDENT' && currentUser.role === 'ADMIN' && (
+                <OccupancyTypeCard
+                  profile={profile}
+                  onSaved={(occupancyType) => setProfile({ ...profile, occupancyType })}
                 />
               )}
 

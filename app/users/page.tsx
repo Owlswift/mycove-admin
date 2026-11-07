@@ -3,7 +3,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { apiFetch, ApiError } from '@/lib/api';
-import { AdminUser, Role } from '@/lib/types';
+import {
+  AdminUser,
+  OccupancyType,
+  OCCUPANCY_TYPE_LABELS,
+  ResidentType,
+  RESIDENT_TYPE_LABELS,
+  Role,
+} from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import { usePaginatedList } from '@/lib/use-paginated-list';
 import CreateUserModal from '@/components/CreateUserModal';
@@ -20,7 +27,11 @@ export default function UsersPage() {
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [resettingGuardUser, setResettingGuardUser] = useState<AdminUser | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [savingOccupancyId, setSavingOccupancyId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [occupancyFilter, setOccupancyFilter] = useState<'' | OccupancyType | 'UNSET'>('');
+  const [residentTypeFilter, setResidentTypeFilter] = useState<'' | ResidentType>('');
+  const [statusFilter, setStatusFilter] = useState<'' | 'ACTIVE' | 'AWAITING' | 'REVOKED'>('');
 
   const loadUsers = useCallback(async () => {
     try {
@@ -77,6 +88,21 @@ export default function UsersPage() {
     }
   }
 
+  async function handleSetOccupancyType(target: AdminUser, occupancyType: OccupancyType) {
+    setSavingOccupancyId(target.id);
+    try {
+      await apiFetch(`/admin/users/${target.id}/occupancy-type`, {
+        method: 'PATCH',
+        body: JSON.stringify({ occupancyType }),
+      });
+      void loadUsers();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to save the tenant/landlord type.');
+    } finally {
+      setSavingOccupancyId(null);
+    }
+  }
+
   async function handleSetGuardPassword(newPassword: string) {
     if (!resettingGuardUser) return;
     setResettingId(resettingGuardUser.id);
@@ -119,12 +145,25 @@ export default function UsersPage() {
         u.phone.toLowerCase().includes(q) ||
         (u.house?.toLowerCase().includes(q) ?? false),
     ) ?? [];
-  const residents = searched.filter((u) => u.role === 'RESIDENT');
+  function matchesStatus(u: AdminUser, filter: '' | 'ACTIVE' | 'AWAITING' | 'REVOKED'): boolean {
+    if (!filter) return true;
+    if (filter === 'REVOKED') return !u.active;
+    if (filter === 'AWAITING') return u.active && u.mustResetPassword;
+    return u.active && !u.mustResetPassword;
+  }
+
+  const residents = searched
+    .filter((u) => u.role === 'RESIDENT')
+    .filter((u) => !occupancyFilter || (occupancyFilter === 'UNSET' ? !u.occupancyType : u.occupancyType === occupancyFilter))
+    .filter((u) => !residentTypeFilter || u.residentType === residentTypeFilter)
+    .filter((u) => matchesStatus(u, statusFilter));
+  const filtersActive = occupancyFilter !== '' || residentTypeFilter !== '' || statusFilter !== '';
   // Dues are billed from the move-in month the admin records, so any resident
   // who pays dues without one needs it filling in.
   const missingMoveIn = (users ?? []).filter(
     (u) => u.role === 'RESIDENT' && u.active && u.duesLiable !== false && !u.moveInMonth,
   );
+  const missingOccupancy = (users ?? []).filter((u) => u.role === 'RESIDENT' && u.active && !u.occupancyType);
   const guards = searched.filter((u) => u.role === 'GUARD');
   // A resident who also holds a staff role (e.g. the chairman) appears here as
   // well as under Residents — same account, two hats.
@@ -194,17 +233,92 @@ export default function UsersPage() {
             </div>
           )}
 
+          {user.role === 'ADMIN' && missingOccupancy.length > 0 && (
+            <div className="mt-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-medium">
+                {missingOccupancy.length} resident{missingOccupancy.length === 1 ? ' has' : 's have'} no tenant/landlord
+                recorded.
+              </p>
+              <p className="mt-1">
+                Open each resident marked &quot;Tenant/landlord not set&quot; below and record it.{' '}
+                <Link href={`/users/${missingOccupancy[0]!.id}`} className="font-medium underline">
+                  Start with {missingOccupancy[0]!.fullName}
+                </Link>
+              </p>
+            </div>
+          )}
+
           {q && searched.length === 0 && (
             <p className="mt-6 text-sm text-body">No users match &quot;{search}&quot;.</p>
           )}
 
+          <div className="mt-8 flex flex-wrap items-end gap-3">
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-body">Tenant/Landlord</label>
+              <select
+                value={occupancyFilter}
+                onChange={(e) => setOccupancyFilter(e.target.value as '' | OccupancyType | 'UNSET')}
+                className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+              >
+                <option value="">All</option>
+                <option value="TENANT">Tenant</option>
+                <option value="LANDLORD">Landlord</option>
+                <option value="UNSET">Not set</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-body">Resident type</label>
+              <select
+                value={residentTypeFilter}
+                onChange={(e) => setResidentTypeFilter(e.target.value as '' | ResidentType)}
+                className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+              >
+                <option value="">All</option>
+                <option value="REGULAR">{RESIDENT_TYPE_LABELS.REGULAR}</option>
+                <option value="COMMERCIAL">{RESIDENT_TYPE_LABELS.COMMERCIAL}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wide text-body">Status</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as '' | 'ACTIVE' | 'AWAITING' | 'REVOKED')}
+                className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
+              >
+                <option value="">All</option>
+                <option value="ACTIVE">Active</option>
+                <option value="AWAITING">Awaiting first login</option>
+                <option value="REVOKED">Revoked</option>
+              </select>
+            </div>
+            {filtersActive && (
+              <button
+                onClick={() => {
+                  setOccupancyFilter('');
+                  setResidentTypeFilter('');
+                  setStatusFilter('');
+                }}
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-body hover:bg-accent-soft"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+
+          {filtersActive && residents.length === 0 && (
+            <p className="mt-3 text-sm text-body">No residents match these filters.</p>
+          )}
+
           <UserSection
             title="Residents"
+            showOccupancy
             users={residents}
             onReset={handleResetPassword}
             resettingId={resettingId}
             onToggleActive={handleToggleActive}
             togglingId={togglingId}
+            onSetOccupancyType={handleSetOccupancyType}
+            savingOccupancyId={savingOccupancyId}
             currentUserId={user.id}
             viewerRole={user.role}
           />
@@ -331,17 +445,23 @@ function UserSection({
   resettingId,
   onToggleActive,
   togglingId,
+  onSetOccupancyType,
+  savingOccupancyId,
   currentUserId,
   viewerRole,
   showRole = false,
+  showOccupancy = false,
 }: {
   title: string;
   showRole?: boolean;
+  showOccupancy?: boolean;
   users: AdminUser[];
   onReset: (user: AdminUser) => void;
   resettingId: string | null;
   onToggleActive: (user: AdminUser) => void;
   togglingId: string | null;
+  onSetOccupancyType?: (user: AdminUser, occupancyType: OccupancyType) => void;
+  savingOccupancyId?: string | null;
   currentUserId: string;
   viewerRole: Role;
 }) {
@@ -360,6 +480,7 @@ function UserSection({
             <tr className="text-left text-body">
               <th className="px-4 py-3 font-medium">Name</th>
               {showRole && <th className="px-4 py-3 font-medium">Role</th>}
+              {showOccupancy && <th className="px-4 py-3 font-medium">Tenant/Landlord</th>}
               <th className="px-4 py-3 font-medium">Phone</th>
               <th className="px-4 py-3 font-medium">House</th>
               <th className="px-4 py-3 font-medium">Status</th>
@@ -385,6 +506,29 @@ function UserSection({
                     </span>
                   )}
                 </td>
+                {showOccupancy && (
+                  <td className="px-4 py-3">
+                    {user.occupancyType ? (
+                      <span className="text-body">{OCCUPANCY_TYPE_LABELS[user.occupancyType]}</span>
+                    ) : viewerRole === 'ADMIN' ? (
+                      <select
+                        value=""
+                        onChange={(e) => onSetOccupancyType?.(user, e.target.value as OccupancyType)}
+                        disabled={savingOccupancyId === user.id}
+                        aria-label={`Tenant or landlord for ${user.fullName}`}
+                        className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 focus:border-accent focus:outline-none disabled:opacity-50"
+                      >
+                        <option value="" disabled>
+                          Not set
+                        </option>
+                        <option value="TENANT">Tenant</option>
+                        <option value="LANDLORD">Landlord</option>
+                      </select>
+                    ) : (
+                      <span className="text-body">—</span>
+                    )}
+                  </td>
+                )}
                 {showRole && (
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">

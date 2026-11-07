@@ -14,6 +14,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
   const [role, setRole] = useState<'RESIDENT' | 'GUARD' | 'FINANCE_SECRETARY' | 'PROJECT_ADMIN'>('RESIDENT');
   const [house, setHouse] = useState('');
   const [residentType, setResidentType] = useState<'REGULAR' | 'COMMERCIAL'>('REGULAR');
+  const [occupancyType, setOccupancyType] = useState<'TENANT' | 'LANDLORD'>('TENANT');
   const [moveInMonth, setMoveInMonth] = useState('');
   const [streets, setStreets] = useState<string[]>([]);
   const [street, setStreet] = useState('');
@@ -52,7 +53,7 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
           phone,
           fullName,
           role,
-          ...(role === 'RESIDENT' && { residentType, moveInMonth }),
+          ...(role === 'RESIDENT' && { residentType, occupancyType, moveInMonth }),
           ...(usesStreets
             ? { street: street || undefined, houseNumber: houseNumber.trim() || undefined }
             : { house: house.trim() || undefined }),
@@ -131,6 +132,22 @@ export default function CreateUserModal({ onClose, onCreated }: Props) {
               >
                 <option value="REGULAR">Regular resident</option>
                 <option value="COMMERCIAL">Commercial (pays the commercial dues rate)</option>
+              </select>
+            </div>
+          )}
+          {role === 'RESIDENT' && (
+            <div>
+              <label htmlFor="occupancy-type" className="block text-sm font-medium text-text">
+                Tenant or landlord
+              </label>
+              <select
+                id="occupancy-type"
+                value={occupancyType}
+                onChange={(e) => setOccupancyType(e.target.value as 'TENANT' | 'LANDLORD')}
+                className="mt-1 w-full rounded-md border border-divider px-3 py-2 text-sm focus:border-accent focus:outline-none"
+              >
+                <option value="TENANT">Tenant</option>
+                <option value="LANDLORD">Landlord (owns the unit)</option>
               </select>
             </div>
           )}

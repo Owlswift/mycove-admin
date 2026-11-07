@@ -7,6 +7,8 @@ export interface AdminUser {
   role: Role;
   /** Regular or commercial — commercial residents pay their own dues rate. */
   residentType?: ResidentType;
+  /** Owns their unit (landlord) or rents it (tenant). null until an admin records it. */
+  occupancyType?: OccupancyType | null;
   /** 'YYYY-MM' the resident moved in or began operating — dues are billed from here. null until recorded. */
   moveInMonth?: string | null;
   /** Day and month only — entered by the resident in the app, or by the admin. */
@@ -153,6 +155,14 @@ export const RESIDENT_TYPE_LABELS: Record<ResidentType, string> = {
   COMMERCIAL: 'Commercial',
 };
 
+/** Owns their unit (landlord) or rents it (tenant) — distinct from ResidentType, which is about the dues rate. */
+export type OccupancyType = 'TENANT' | 'LANDLORD';
+
+export const OCCUPANCY_TYPE_LABELS: Record<OccupancyType, string> = {
+  TENANT: 'Tenant',
+  LANDLORD: 'Landlord',
+};
+
 export interface ResidentDues {
   id: string;
   fullName: string;
@@ -232,6 +242,7 @@ export interface ResidentImportRow {
   fullName: string;
   house: string | null;
   residentType: ResidentType | null;
+  occupancyType: OccupancyType | null;
   moveInMonth: string | null;
 }
 

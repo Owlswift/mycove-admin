@@ -6,7 +6,12 @@ import { ArrowLeft } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api';
 import { parseSpreadsheet } from '@/lib/sheet-parse';
 import { downloadCsv } from '@/lib/csv-export';
-import { ResidentImportPreview, ResidentImportRow, RESIDENT_TYPE_LABELS } from '@/lib/types';
+import {
+  ResidentImportPreview,
+  ResidentImportRow,
+  RESIDENT_TYPE_LABELS,
+  OCCUPANCY_TYPE_LABELS,
+} from '@/lib/types';
 import { useCurrentUser } from '@/lib/use-current-user';
 import { usePaginatedList } from '@/lib/use-paginated-list';
 import AppShell from '@/components/AppShell';
@@ -19,6 +24,7 @@ interface UploadRow {
   fullName: string;
   house: string;
   residentType: string;
+  occupancyType: string;
   moveInMonth: string;
 }
 
@@ -27,6 +33,7 @@ const HEADER_ALIASES: Record<keyof UploadRow, string[]> = {
   fullName: ['full name', 'fullname', 'name', 'resident name'],
   house: ['house', 'house address', 'address'],
   residentType: ['resident type', 'residenttype', 'type'],
+  occupancyType: ['tenant/landlord', 'tenant or landlord', 'occupancy type', 'occupancytype', 'tenant landlord'],
   moveInMonth: ['move-in month', 'move in month', 'moveinmonth', 'move-in', 'move in'],
 };
 
@@ -41,10 +48,11 @@ function readUpload(table: string[][]): { rows: UploadRow[] } | { error: string 
     fullName: indexOf('fullName'),
     house: indexOf('house'),
     residentType: indexOf('residentType'),
+    occupancyType: indexOf('occupancyType'),
     moveInMonth: indexOf('moveInMonth'),
   };
 
-  const missing = (['phone', 'fullName', 'residentType'] as const).filter((f) => cols[f] === -1);
+  const missing = (['phone', 'fullName', 'residentType', 'occupancyType'] as const).filter((f) => cols[f] === -1);
   if (missing.length > 0) {
     return { error: `The file is missing a "${missing.join('", "')}" column. Use the template to see the layout.` };
   }
@@ -58,6 +66,7 @@ function readUpload(table: string[][]): { rows: UploadRow[] } | { error: string 
       fullName: (r[cols.fullName] ?? '').trim(),
       house: cols.house === -1 ? '' : (r[cols.house] ?? '').trim(),
       residentType: (r[cols.residentType] ?? '').trim(),
+      occupancyType: (r[cols.occupancyType] ?? '').trim(),
       moveInMonth: cols.moveInMonth === -1 ? '' : (r[cols.moveInMonth] ?? '').trim(),
     })),
   };
@@ -100,6 +109,7 @@ export default function ImportResidentsPage() {
         { key: 'FullName', label: 'Full Name' },
         { key: 'House', label: 'House' },
         { key: 'ResidentType', label: 'Resident Type' },
+        { key: 'OccupancyType', label: 'Tenant/Landlord' },
         { key: 'MoveInMonth', label: 'Move-in Month' },
       ],
       [
@@ -108,6 +118,7 @@ export default function ImportResidentsPage() {
           FullName: 'Chidinma Okafor',
           House: '12 Palm Street',
           ResidentType: 'Regular',
+          OccupancyType: 'Tenant',
           MoveInMonth: '2024-03',
         },
         {
@@ -115,6 +126,7 @@ export default function ImportResidentsPage() {
           FullName: 'Tunde Adeyemi Stores',
           House: '4 Ocean Drive',
           ResidentType: 'Commercial',
+          OccupancyType: 'Landlord',
           MoveInMonth: '',
         },
       ],
@@ -212,6 +224,10 @@ export default function ImportResidentsPage() {
               </li>
               <li>
                 <b>Resident Type</b> — <code>Regular</code> or <code>Commercial</code>.
+              </li>
+              <li>
+                <b>Tenant/Landlord</b> — <code>Tenant</code> or <code>Landlord</code>. Shown as separate lists on the
+                Residents page.
               </li>
               <li>
                 <b>House</b> — optional, their unit/address.
@@ -317,6 +333,7 @@ export default function ImportResidentsPage() {
                       <th className="px-4 py-3 font-medium">Phone</th>
                       <th className="px-4 py-3 font-medium">House</th>
                       <th className="px-4 py-3 font-medium">Type</th>
+                      <th className="px-4 py-3 font-medium">Tenant/Landlord</th>
                       <th className="px-4 py-3 font-medium">Move-in</th>
                       <th className="px-4 py-3 font-medium">Status</th>
                     </tr>
@@ -330,6 +347,9 @@ export default function ImportResidentsPage() {
                         <td className="px-4 py-3 text-body">{r.house ?? '—'}</td>
                         <td className="px-4 py-3 text-body">
                           {r.residentType ? RESIDENT_TYPE_LABELS[r.residentType] : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-body">
+                          {r.occupancyType ? OCCUPANCY_TYPE_LABELS[r.occupancyType] : '—'}
                         </td>
                         <td className="px-4 py-3 text-body">{r.moveInMonth ?? '—'}</td>
                         <td className="px-4 py-3">
