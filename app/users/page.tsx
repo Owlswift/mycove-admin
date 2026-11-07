@@ -18,10 +18,13 @@ import AppShell, { ROLE_LABELS } from '@/components/AppShell';
 import Pagination from '@/components/Pagination';
 import SearchInput from '@/components/SearchInput';
 
+type UsersTab = 'residents' | 'guards' | 'staff';
+
 export default function UsersPage() {
   const { user, loading: userLoading } = useCurrentUser();
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [error, setError] = useState('');
+  const [tab, setTab] = useState<UsersTab>('residents');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [revealedPassword, setRevealedPassword] = useState<{ name: string; password: string } | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
@@ -169,6 +172,12 @@ export default function UsersPage() {
   // well as under Residents — same account, two hats.
   const admins = searched.filter((u) => staffRolesOf(u).length > 0);
 
+  const TABS: { id: UsersTab; label: string; count: number }[] = [
+    { id: 'residents', label: 'Residents', count: residents.length },
+    { id: 'guards', label: 'Security Guards', count: guards.length },
+    { id: 'staff', label: 'Staff / Executives', count: admins.length },
+  ];
+
   return (
     <AppShell user={user} allow={['ADMIN', 'CHAIRMAN']}>
       <div className="px-6 py-8">
@@ -199,150 +208,204 @@ export default function UsersPage() {
             </div>
           </div>
 
-          {revealedPassword && (
-            <div className="mt-6 flex items-start justify-between rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
-              <p className="text-sm text-amber-900">
-                Default password for <span className="font-semibold">{revealedPassword.name}</span>:{' '}
-                <span className="font-mono font-semibold">{revealedPassword.password}</span>{' '}
-                — share this with them now, it won&apos;t be shown again.
-              </p>
-              <button
-                onClick={() => setRevealedPassword(null)}
-                className="ml-4 shrink-0 text-sm text-amber-700 hover:text-amber-900"
-              >
-                Dismiss
-              </button>
+          <div className="mt-6" role="tablist" aria-label="Account sections">
+            <div className="inline-flex items-center gap-1 rounded-lg bg-accent-soft p-1">
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  id={`users-tab-${t.id}`}
+                  role="tab"
+                  type="button"
+                  aria-selected={tab === t.id}
+                  aria-controls={`users-panel-${t.id}`}
+                  onClick={() => setTab(t.id)}
+                  className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                    tab === t.id
+                      ? 'bg-surface text-title shadow-sm'
+                      : 'text-body hover:text-title'
+                  }`}
+                >
+                  {t.label} <span className={tab === t.id ? 'text-body' : 'text-body/70'}>({t.count})</span>
+                </button>
+              ))}
             </div>
-          )}
+          </div>
 
-          {error && <p className="mt-6 text-sm text-danger">{error}</p>}
+          <div className="mt-4 space-y-3">
+            {revealedPassword && (
+              <div className="flex items-start justify-between rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+                <p className="text-sm text-amber-900">
+                  Default password for <span className="font-semibold">{revealedPassword.name}</span>:{' '}
+                  <span className="font-mono font-semibold">{revealedPassword.password}</span>{' '}
+                  — share this with them now, it won&apos;t be shown again.
+                </p>
+                <button
+                  onClick={() => setRevealedPassword(null)}
+                  className="ml-4 shrink-0 text-sm text-amber-700 hover:text-amber-900"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
 
-          {user.role === 'ADMIN' && missingMoveIn.length > 0 && (
-            <div className="mt-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <p className="font-medium">
-                {missingMoveIn.length} resident{missingMoveIn.length === 1 ? ' has' : 's have'} no move-in month recorded.
-              </p>
-              <p className="mt-1">
-                Dues are billed from the month and year a resident moved in or began operating, and only you can set it.
-                Open each resident marked &quot;Move-in not set&quot; below and enter it, so their balance is worked out
-                correctly.{' '}
-                <Link href={`/users/${missingMoveIn[0]!.id}`} className="font-medium underline">
-                  Start with {missingMoveIn[0]!.fullName}
-                </Link>
-              </p>
-            </div>
-          )}
+            {error && <p className="text-sm text-danger">{error}</p>}
 
-          {user.role === 'ADMIN' && missingOccupancy.length > 0 && (
-            <div className="mt-6 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <p className="font-medium">
-                {missingOccupancy.length} resident{missingOccupancy.length === 1 ? ' has' : 's have'} no tenant/landlord
-                recorded.
-              </p>
-              <p className="mt-1">
-                Open each resident marked &quot;Tenant/landlord not set&quot; below and record it.{' '}
-                <Link href={`/users/${missingOccupancy[0]!.id}`} className="font-medium underline">
-                  Start with {missingOccupancy[0]!.fullName}
-                </Link>
-              </p>
-            </div>
-          )}
+            {tab === 'residents' && user.role === 'ADMIN' && missingMoveIn.length > 0 && (
+              <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <p className="font-medium">
+                  {missingMoveIn.length} resident{missingMoveIn.length === 1 ? ' has' : 's have'} no move-in month
+                  recorded.
+                </p>
+                <p className="mt-1">
+                  Dues are billed from the month and year a resident moved in or began operating, and only you can set
+                  it. Open each resident marked &quot;Move-in not set&quot; below and enter it, so their balance is
+                  worked out correctly.{' '}
+                  <Link href={`/users/${missingMoveIn[0]!.id}`} className="font-medium underline">
+                    Start with {missingMoveIn[0]!.fullName}
+                  </Link>
+                </p>
+              </div>
+            )}
 
-          {q && searched.length === 0 && (
-            <p className="mt-6 text-sm text-body">No users match &quot;{search}&quot;.</p>
-          )}
-
-          <div className="mt-8 flex flex-wrap items-end gap-3">
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-body">Tenant/Landlord</label>
-              <select
-                value={occupancyFilter}
-                onChange={(e) => setOccupancyFilter(e.target.value as '' | OccupancyType | 'UNSET')}
-                className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
-              >
-                <option value="">All</option>
-                <option value="TENANT">Tenant</option>
-                <option value="LANDLORD">Landlord</option>
-                <option value="UNSET">Not set</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-body">Resident type</label>
-              <select
-                value={residentTypeFilter}
-                onChange={(e) => setResidentTypeFilter(e.target.value as '' | ResidentType)}
-                className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
-              >
-                <option value="">All</option>
-                <option value="REGULAR">{RESIDENT_TYPE_LABELS.REGULAR}</option>
-                <option value="COMMERCIAL">{RESIDENT_TYPE_LABELS.COMMERCIAL}</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium uppercase tracking-wide text-body">Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as '' | 'ACTIVE' | 'AWAITING' | 'REVOKED')}
-                className="mt-1 rounded-md border border-divider px-3 py-1.5 text-sm focus:border-accent focus:outline-none"
-              >
-                <option value="">All</option>
-                <option value="ACTIVE">Active</option>
-                <option value="AWAITING">Awaiting first login</option>
-                <option value="REVOKED">Revoked</option>
-              </select>
-            </div>
-            {filtersActive && (
-              <button
-                onClick={() => {
-                  setOccupancyFilter('');
-                  setResidentTypeFilter('');
-                  setStatusFilter('');
-                }}
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-body hover:bg-accent-soft"
-              >
-                Clear filters
-              </button>
+            {tab === 'residents' && user.role === 'ADMIN' && missingOccupancy.length > 0 && (
+              <div className="rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <p className="font-medium">
+                  {missingOccupancy.length} resident{missingOccupancy.length === 1 ? ' has' : 's have'} no
+                  tenant/landlord recorded.
+                </p>
+                <p className="mt-1">
+                  Open each resident marked &quot;Tenant/landlord not set&quot; below and record it.{' '}
+                  <Link href={`/users/${missingOccupancy[0]!.id}`} className="font-medium underline">
+                    Start with {missingOccupancy[0]!.fullName}
+                  </Link>
+                </p>
+              </div>
             )}
           </div>
 
-          {filtersActive && residents.length === 0 && (
-            <p className="mt-3 text-sm text-body">No residents match these filters.</p>
-          )}
+          <div className="mt-4">
+            {tab === 'residents' && (
+              <div id="users-panel-residents" role="tabpanel" aria-labelledby="users-tab-residents">
+                {residents.length === 0 ? (
+                  <p className="rounded-lg border border-divider bg-surface px-4 py-6 text-center text-sm text-body">
+                    {q
+                      ? `No residents match "${search}".`
+                      : filtersActive
+                        ? 'No residents match these filters.'
+                        : 'No residents yet.'}
+                  </p>
+                ) : (
+                  <UserSection
+                    showOccupancy
+                    users={residents}
+                    onReset={handleResetPassword}
+                    resettingId={resettingId}
+                    onToggleActive={handleToggleActive}
+                    togglingId={togglingId}
+                    onSetOccupancyType={handleSetOccupancyType}
+                    savingOccupancyId={savingOccupancyId}
+                    currentUserId={user.id}
+                    viewerRole={user.role}
+                    toolbar={
+                      <>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-body">
+                          Tenant/Landlord
+                          <select
+                            value={occupancyFilter}
+                            onChange={(e) => setOccupancyFilter(e.target.value as '' | OccupancyType | 'UNSET')}
+                            className="rounded-md border border-divider bg-surface px-2 py-1 text-xs font-medium text-text focus:border-accent focus:outline-none"
+                          >
+                            <option value="">All</option>
+                            <option value="TENANT">Tenant</option>
+                            <option value="LANDLORD">Landlord</option>
+                            <option value="UNSET">Not set</option>
+                          </select>
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-body">
+                          Resident type
+                          <select
+                            value={residentTypeFilter}
+                            onChange={(e) => setResidentTypeFilter(e.target.value as '' | ResidentType)}
+                            className="rounded-md border border-divider bg-surface px-2 py-1 text-xs font-medium text-text focus:border-accent focus:outline-none"
+                          >
+                            <option value="">All</option>
+                            <option value="REGULAR">{RESIDENT_TYPE_LABELS.REGULAR}</option>
+                            <option value="COMMERCIAL">{RESIDENT_TYPE_LABELS.COMMERCIAL}</option>
+                          </select>
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs font-medium text-body">
+                          Status
+                          <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value as '' | 'ACTIVE' | 'AWAITING' | 'REVOKED')}
+                            className="rounded-md border border-divider bg-surface px-2 py-1 text-xs font-medium text-text focus:border-accent focus:outline-none"
+                          >
+                            <option value="">All</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="AWAITING">Awaiting first login</option>
+                            <option value="REVOKED">Revoked</option>
+                          </select>
+                        </label>
+                        {filtersActive && (
+                          <button
+                            onClick={() => {
+                              setOccupancyFilter('');
+                              setResidentTypeFilter('');
+                              setStatusFilter('');
+                            }}
+                            className="text-xs font-medium text-accent hover:text-accent-hover"
+                          >
+                            Clear filters
+                          </button>
+                        )}
+                      </>
+                    }
+                  />
+                )}
+              </div>
+            )}
 
-          <UserSection
-            title="Residents"
-            showOccupancy
-            users={residents}
-            onReset={handleResetPassword}
-            resettingId={resettingId}
-            onToggleActive={handleToggleActive}
-            togglingId={togglingId}
-            onSetOccupancyType={handleSetOccupancyType}
-            savingOccupancyId={savingOccupancyId}
-            currentUserId={user.id}
-            viewerRole={user.role}
-          />
-          <UserSection
-            title="Security Guards"
-            users={guards}
-            onReset={handleResetPassword}
-            resettingId={resettingId}
-            onToggleActive={handleToggleActive}
-            togglingId={togglingId}
-            currentUserId={user.id}
-            viewerRole={user.role}
-          />
-          <UserSection
-            title="Staff"
-            showRole
-            users={admins}
-            onReset={handleResetPassword}
-            resettingId={resettingId}
-            onToggleActive={handleToggleActive}
-            togglingId={togglingId}
-            currentUserId={user.id}
-            viewerRole={user.role}
-          />
+            {tab === 'guards' && (
+              <div id="users-panel-guards" role="tabpanel" aria-labelledby="users-tab-guards">
+                {guards.length === 0 ? (
+                  <p className="rounded-lg border border-divider bg-surface px-4 py-6 text-center text-sm text-body">
+                    {q ? `No security guards match "${search}".` : 'No security guards yet.'}
+                  </p>
+                ) : (
+                  <UserSection
+                    users={guards}
+                    onReset={handleResetPassword}
+                    resettingId={resettingId}
+                    onToggleActive={handleToggleActive}
+                    togglingId={togglingId}
+                    currentUserId={user.id}
+                    viewerRole={user.role}
+                  />
+                )}
+              </div>
+            )}
+
+            {tab === 'staff' && (
+              <div id="users-panel-staff" role="tabpanel" aria-labelledby="users-tab-staff">
+                {admins.length === 0 ? (
+                  <p className="rounded-lg border border-divider bg-surface px-4 py-6 text-center text-sm text-body">
+                    {q ? `No staff/executive accounts match "${search}".` : 'No staff/executive accounts yet.'}
+                  </p>
+                ) : (
+                  <UserSection
+                    showRole
+                    users={admins}
+                    onReset={handleResetPassword}
+                    resettingId={resettingId}
+                    onToggleActive={handleToggleActive}
+                    togglingId={togglingId}
+                    currentUserId={user.id}
+                    viewerRole={user.role}
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {showCreateModal && (
@@ -439,7 +502,6 @@ function canManage(viewer: Role, target: AdminUser, viewerId: string): boolean {
 }
 
 function UserSection({
-  title,
   users,
   onReset,
   resettingId,
@@ -451,8 +513,8 @@ function UserSection({
   viewerRole,
   showRole = false,
   showOccupancy = false,
+  toolbar,
 }: {
-  title: string;
   showRole?: boolean;
   showOccupancy?: boolean;
   users: AdminUser[];
@@ -464,17 +526,19 @@ function UserSection({
   savingOccupancyId?: string | null;
   currentUserId: string;
   viewerRole: Role;
+  toolbar?: React.ReactNode;
 }) {
   const { page, setPage, totalPages, pageItems } = usePaginatedList(users);
 
-  if (users.length === 0) return null;
-
   return (
-    <div className="mt-8">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-body">
-        {title} <span className="font-normal normal-case text-body/60">({users.length})</span>
-      </h2>
-      <div className="mt-3 overflow-x-auto rounded-lg border border-divider bg-surface">
+    <div>
+      <div className="overflow-hidden rounded-lg border border-divider bg-surface">
+        {toolbar && (
+          <div className="flex flex-wrap items-center gap-4 border-b border-divider bg-background/40 px-4 py-2.5">
+            {toolbar}
+          </div>
+        )}
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-divider text-sm">
           <thead>
             <tr className="text-left text-body">
@@ -589,6 +653,7 @@ function UserSection({
             ))}
           </tbody>
         </table>
+        </div>
         {totalPages > 1 && (
           <div className="border-t border-divider px-4 py-3">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

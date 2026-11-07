@@ -74,20 +74,26 @@ export default function HouseholdInvitesPage() {
           <div>
             <h2 className="text-xl font-semibold text-title">Household Invitations</h2>
             <p className="mt-1 text-sm text-body">
-              A resident invited someone to get their own account under their household — no separate dues
-              or levies for the invitee once approved. Review before it goes live.
+              A resident invites someone to get their own account under their household — no separate dues
+              or levies for the invitee. The account is created the moment they send the invite, no approval
+              needed.
             </p>
           </div>
 
           {error && <p className="mt-6 text-sm text-danger">{error}</p>}
 
-          <h3 className="mt-8 text-sm font-semibold uppercase tracking-wide text-body">
-            Pending Approval
-          </h3>
-          {invites === null && !error && <p className="mt-3 text-sm text-body">Loading…</p>}
-          {invites && invites.length === 0 && (
-            <p className="mt-3 text-sm text-body">No pending household invitations.</p>
+          {invites && invites.length > 0 && (
+            <>
+              <h3 className="mt-8 text-sm font-semibold uppercase tracking-wide text-body">
+                Needs Review (sent before approval was removed)
+              </h3>
+              <p className="mt-1 text-xs text-body">
+                These were sent before invites started creating the account right away, and were never
+                reviewed. New invites never land here.
+              </p>
+            </>
           )}
+          {invites === null && !error && <p className="mt-3 text-sm text-body">Loading…</p>}
           {invites && invites.length > 0 && (
             <div className="mt-3 space-y-3">
               {invitesPage.pageItems.map((inv) => (
